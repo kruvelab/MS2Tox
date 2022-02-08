@@ -1,0 +1,23 @@
+Package: MS2Tox
+Type: Package
+Title: Predicting LC50 Values From MS2 Fragmentation Data
+Version: 0.1.0
+Author: as.person(c
+    "Pilleriin Peets <pilleriin.peets@gmail.com> [aut, cre]",
+    "Anneli Kruve <anneli.kruve@su.se> [aut]")
+Maintainer: The package maintainer <pilleriin.peets@gmail.com>
+Description: LC50 predictions from fingerprints that are obtained using SIRIUS+CSI:FingerID
+License: GPL-2
+Encoding: UTF-8
+LazyData: true
+Imports: 
+  Rdisop,
+  dplyr,
+  readr,
+  rlist,
+  stringr,
+  tibble,
+  xgboost,
+  tidyselect,
+  magrittr
+RoxygenNote: 7.1.1
