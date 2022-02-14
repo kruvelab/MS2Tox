@@ -39,6 +39,7 @@ For calculations .ms files can be dragged into the GUI. Before that new project 
 | I  | 6 |   | K | 1 |   | Na | 1 |   | As | 2 |
 
 
+
 ![image](https://user-images.githubusercontent.com/68953270/153868996-770a007f-4f06-4dc5-bc9c-30fd57fc89cd.png)
 
 **Figure 3.** Folder after fingerprint calculations that directory must be put into the function
@@ -56,9 +57,9 @@ R package *MS2Tox* can be then used for toxicity value predictions.  R package c
 
 Addition to Rdisop CRAN packages *dplyr, readr, rlist, stringr, tibble, xgboost, tidyselect, magrittr* are needed before installing and using *MS2Tox*. 
 
-For installing MS2Tox .zip file can be downloaded from GitHub folder  which contains addition to code also pretrained models for fish static LC50 and fish flow-through LC50. For installing .zip file can be unpacked and .tar.gz file can be installed using Install -> Package Archieve file (.zip; .tar.gz). In order for code to be able to reach trained models, Working directory must be set to downloaded folder from GitHub  “/MS2Tox”. 
+For installing MS2Tox.zip file can be downloaded from GitHub folder which contains addition to code also pretrained models for fish static LC50 and fish flow-through LC50. For installing .zip file can be unpacked and .tar.gz file can be installed using Install -> Package Archieve file (.zip; .tar.gz). In order for code to be able to reach trained models, Working directory must be set to downloaded folder from GitHub  “/MS2Tox”. 
 
-FishLC50Prediction () function takes in the path to the directory containing all the calculated fingerprints and information about the LC50 mode. Right now there are two possible LC50 modes for which predictions can be made: static and flow through. If LC50mode is not chosen, calculations will be done automatically in static mode. Directory that will be input for prediction function is shown in Fig 1. It returns a summary table with calculated toxicities for all of the peaks for which fingerprints were calculated by SIRIUS+CSI:FingerID. The calculation is based on the fingerprints associated with the first ranked molecular formula. SIRIUS+CSI:FingerID predicted formula, prediced ion and folder number are also displayed in the summary table. In order for the code to work properly input files for SIRIUS+CSI:FingerID must contain the compounds id/name in the first part of the file name (e.g AU231458_*restofthename*.ms). This first part of the name is used as id column in the summary table and can be used to link a specific peak with a specific toxicity value.
+*FishLC50Prediction ()* function takes in the path to the directory containing all the calculated fingerprints and information about the LC50 mode. Right now there are two possible LC50 modes for which predictions can be made: static and flow through. If LC50mode is not chosen, calculations will be done automatically in static mode. Directory that will be input for prediction function is shown in Fig 3. It returns a summary table with calculated toxicities for all of the peaks for which fingerprints were calculated by SIRIUS+CSI:FingerID. The calculation is based on the fingerprints associated with the first ranked molecular formula. SIRIUS+CSI:FingerID predicted formula, prediced ion and folder number are also displayed in the summary table. In order for the code to work properly input files for SIRIUS+CSI:FingerID must contain the compounds id/name in the first part of the file name (e.g AU231458_*restofthename*.ms). This first part of the name is used as id column in the summary table and can be used to link a specific peak with a specific toxicity value.
 
 If data sets are very big, in SIRIUS+CSI:FingerID calculations results could be saved so that one directory contains up to 1000 subfolders, otherwise calculation with *FishLC50Prediction()* might exceed the memory limits of R.
 
@@ -70,6 +71,6 @@ Code example:
 
     folderwithSIRIUSfiles <- "C:/Desktop/Folder"  #Add your directory with SIRIUS calculated fingerprints
 
-    chosen_mode <- “static”
+    chosen_mode <- “static” #or "flow"
 
     results  <- FishLC50Prediction(folderwithSIRIUSfiles, chosen_mode)
