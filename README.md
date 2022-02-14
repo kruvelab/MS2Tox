@@ -53,11 +53,11 @@ In this work SIRIUS+CSI:FingerID version 4.9.5 was used so the prediction method
 
 Code example:
 
-folderwithSIRIUSfiles <- "C:/Desktop/Folder"
+    folderwithSIRIUSfiles <- "C:/Desktop/Folder"
 
-chosen_mode <- “static”
+    chosen_mode <- “static”
 
-results  <- FishLC50Prediction(folderwithSIRIUSfiles, chosen_mode)
+    results  <- FishLC50Prediction(folderwithSIRIUSfiles, chosen_mode)
 
 
 
