@@ -59,7 +59,7 @@ In this work SIRIUS+CSI:FingerID version 4.9.5 was used so the prediction method
 
 Code example:
 
-    folderwithSIRIUSfiles <- "C:/Desktop/Folder"
+    folderwithSIRIUSfiles <- "C:/Desktop/Folder"  #*Add your directory with SIRIUS calculated fingerprints*
 
     chosen_mode <- “static”
 
