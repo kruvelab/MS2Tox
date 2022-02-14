@@ -8,7 +8,7 @@ Folder "MS2Tox" is R package folder containing all the needed files for using th
 
 Step by step instructions from MS data to LC50 values
 
-Fingerprint calculation with SIRIUS+CSI:FingerID
+##Fingerprint calculation with SIRIUS+CSI:FingerID
 
 Before calculating toxicity values, SIRIUS+CSI:FingerID must be used for calculations of fingerprints. Fingerprint calculations with SIRIUS+CSI:FingerID can be done all at once and in this case all the calculated fingerprints will be in this one folder. This folder  is used as path to directory in the input for function FishLC50Prediction(). For too many peaks, the SIRIUS+CSI:FingerID calculation may crash. In this case we suggest loading the peaks for calculations in the patch of 200 at a time.
 
@@ -29,7 +29,7 @@ Table 1. Selected elements and their maximum amount for SIRIUS+CSI:FingerID calc
 @TABLE
 
 
-MS2Tox package for predicting LC50 values from fingerprints 
+##MS2Tox package for predicting LC50 values from fingerprints 
 
 R package MS2Tox can be then used for toxicity value predictions.  R package can be found in GitHub and before installing MS2Tox package Rdisop is needed to be installed. To install this package, start R (version "4.1") and enter:
 
@@ -37,6 +37,7 @@ if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
 BiocManager::install("Rdisop")
+
 
 Addition to Rdisop CRAN packages dplyr, readr, rlist, stringr, tibble, xgboost, tidyselect, magrittr are needed before installing and using MS2Tox. 
 
