@@ -29,8 +29,9 @@ For calculations .ms files can be dragged into the GUI. Before that new project 
 | Element  | Amount |   | Element | Amount |   | Element | Amount |   | Element | Amount |
 | - | - | - | - | -- | - | -- | - | - | - | -- |
 | H  | Inf |   | C | Inf |   | N | Inf |   | O | Inf |
-| - | - | - | - | -- | - | -- | - | - | - | -- |
 | P  | 8 |   | B | 11 |   | Si | 9 |   | S | 12 |
+| Cl  | 18 |   | Se | 2 |   | Br | 10 |   | F | Inf |
+| I  | 6 |   | K | 1 |   | Na | 1 |   | As | 2 |
 
 
 ## MS2Tox package for predicting LC50 values from fingerprints 
