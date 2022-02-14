@@ -21,7 +21,7 @@ For fingerprint calculation it is important that correct input files are dragged
 
 For calculations .ms files can be dragged into the GUI. Before that new project directory must be established by clicking to icon New (see Fig 2A). This path to the directory will be used in final R function for calculations. After dragging .ms files into the application all the information about each file is listed on the left side in the application (Fig 2B). By clicking on Compute All button (Fig 2C) compute window (Fig 2D) opens. In this window parameters for calculations can be chosen. In this work for Orbitrap measurements mass deviation 5 ppm was chosen. Calculations may take time from few minutes to hours depending on the number of .ms files and molecular mass of the compounds. After calculations a subfolder per .ms file has been created and it contains calculated fingerprints, scores, fragmentation trees, etc. All output folders start with order number that is shown in the final table in column named “foldernumber”.
 
-@pilt siriuse programmist
+![image](https://user-images.githubusercontent.com/68953270/153869051-172af638-38f4-4623-8e40-8bc1f55cc47d.png)
 
 **Figure 2.** SIRIUS+CSI:FingerID application with chosen parameters for calculations
 
