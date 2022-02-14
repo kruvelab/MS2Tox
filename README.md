@@ -12,19 +12,19 @@ Step by step instructions from MS data to LC50 values
 
 Before calculating toxicity values, SIRIUS+CSI:FingerID must be used for calculations of fingerprints. Fingerprint calculations with SIRIUS+CSI:FingerID can be done all at once and in this case all the calculated fingerprints will be in this one folder. This folder  is used as path to directory in the input for function FishLC50Prediction(). For too many peaks, the SIRIUS+CSI:FingerID calculation may crash. In this case we suggest loading the peaks for calculations in the patch of 200 at a time.
 
-For fingerprint calculation it is important that correct input files are dragged into SIRIUS+CSI:FingerID GUI (version 4.9.5). Example of the .ms file is shown in Figure 1. The first row must start with >compound and then after space can contain either name of the compound or unique id for the analysed peak/spectrum. >parentmass and >ionization are not mandatory but helpful for better identification. Row >formula can be added if known. Information from MS2 spectra are added after row >collision collicion value. As SIRIUS+CSI:FingerID adds all the different MS2 spectra together before calculations it is not extremely important to add exactly correct collision energy values or even separate the spectra  (RAMP can be used as well) . For last part after >ms1peaks isotope pattern from MS1 spectrum can be added; however, this is not mandotory for calculations can improve the formula prediction. 
+For fingerprint calculation it is important that correct input files are dragged into SIRIUS+CSI:FingerID GUI (version 4.9.5). Example of the .ms file is shown in Figure 1. The first row must start with **>compound** and then after space can contain either name of the compound or unique id for the analysed peak/spectrum. **>parentmass** and **>ionization** are not mandatory but helpful for better identification. Row **>formula** can be added if known. Information from MS2 spectra are added after row **>collision** collicion value. As SIRIUS+CSI:FingerID adds all the different MS2 spectra together before calculations it is not extremely important to add exactly correct collision energy values or even separate the spectra  (RAMP can be used as well) . For last part after **>ms1peaks** isotope pattern from MS1 spectrum can be added; however, this is not mandotory for calculations can improve the formula prediction. 
 
 @pildid
 
-Figure 1. On the left is example input file for SIRIUS+CSI:FingerID, on the right folder after fingerprint calculations that directory must be put into the function
+**Figure 1.** On the left is example input file for SIRIUS+CSI:FingerID, on the right folder after fingerprint calculations that directory must be put into the function
 
 For calculations .ms files can be dragged into the GUI. Before that new project directory must be established by clicking to icon New (see Fig 2A). This path to the directory will be used in final R function for calculations. After dragging .ms files into the application all the information about each file is listed on the left side in the application (Fig 2B). By clicking on Compute All button (Fig 2C) compute window (Fig 2D) opens. In this window parameters for calculations can be chosen. In this work for Orbitrap measurements mass deviation 5 ppm was chosen. Calculations may take time from few minutes to hours depending on the number of .ms files and molecular mass of the compounds. After calculations a subfolder per .ms file has been created and it contains calculated fingerprints, scores, fragmentation trees, etc. All output folders start with order number that is shown in the final table in column named “foldernumber”.
 
 @pilt siriuse programmist
 
-Figure 2. SIRIUS+CSI:FingerID application with chosen parameters for calculations
+**Figure 2.** SIRIUS+CSI:FingerID application with chosen parameters for calculations
 
-Table 1. Selected elements and their maximum amount for SIRIUS+CSI:FingerID calculations
+**Table 1.** Selected elements and their maximum amount for SIRIUS+CSI:FingerID calculations
 
 @TABLE
 
