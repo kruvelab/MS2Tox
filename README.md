@@ -12,7 +12,7 @@ Step by step instructions from MS data to LC50 values
 
 Before calculating toxicity values, SIRIUS+CSI:FingerID must be used for calculations of fingerprints. Fingerprint calculations with SIRIUS+CSI:FingerID can be done all at once and in this case all the calculated fingerprints will be in this one folder. This folder  is used as path to directory in the input for function FishLC50Prediction(). For too many peaks, the SIRIUS+CSI:FingerID calculation may crash. In this case we suggest loading the peaks for calculations in the patch of 200 at a time.
 
-For fingerprint calculation it is important that correct input files are dragged into SIRIUS+CSI:FingerID GUI (version 4.9.5). Example of the .ms file is shown in Figure 1. The first row must start with **>compound** and then after space can contain either name of the compound or unique id for the analysed peak/spectrum. **>parentmass** and **>ionization** are not mandatory but helpful for better identification. Row **>formula** can be added if known. Information from MS2 spectra are added after row **>collision** collicion value. As SIRIUS+CSI:FingerID adds all the different MS2 spectra together before calculations it is not extremely important to add exactly correct collision energy values or even separate the spectra  (RAMP can be used as well) . For last part after **>ms1peaks** isotope pattern from MS1 spectrum can be added; however, this is not mandotory for calculations can improve the formula prediction. 
+For fingerprint calculation it is important that correct input files are dragged into SIRIUS+CSI:FingerID GUI (version 4.9.5). Example of the .ms file is shown in Figure 1. The first row must start with **>compound** and then after space can contain either name of the compound or unique id for the analysed peak/spectrum. **>parentmass** and **>ionization** are not mandatory but helpful for better identification. Row **>formula** can be added if known. Information from MS2 spectra are added after row **>collision** *collision value*. As SIRIUS+CSI:FingerID adds all the different MS2 spectra together before calculations it is not extremely important to add exactly correct collision energy values or even separate the spectra  (RAMP can be used as well) . For last part after **>ms1peaks** isotope pattern from MS1 spectrum can be added; however, this is not mandotory for calculations can improve the formula prediction. 
 
 @pildid
 
@@ -33,10 +33,10 @@ For calculations .ms files can be dragged into the GUI. Before that new project 
 
 R package MS2Tox can be then used for toxicity value predictions.  R package can be found in GitHub and before installing MS2Tox package Rdisop is needed to be installed. To install this package, start R (version "4.1") and enter:
 
-if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
+    if (!require("BiocManager", quietly = TRUE))
+        install.packages("BiocManager")
 
-BiocManager::install("Rdisop")
+    BiocManager::install("Rdisop")
 
 
 Addition to Rdisop CRAN packages dplyr, readr, rlist, stringr, tibble, xgboost, tidyselect, magrittr are needed before installing and using MS2Tox. 
