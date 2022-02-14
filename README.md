@@ -26,10 +26,10 @@ For calculations .ms files can be dragged into the GUI. Before that new project 
 
 **Table 1.** Selected elements and their maximum amount for SIRIUS+CSI:FingerID calculations
 
-| First Header  | Second Header |
-| ------------- | ------------- |
-| Content Cell  | Content Cell  |
-| Content Cell  | Content Cell  |
+| H  | Inf |   | C | Inf |   | N | Inf |   | O | Inf |
+| - | - | - | - | -- | - | -- | - | - | - | -- |
+| P  | 8 |   | B | 11 |   | Si | 9 |   | S | 12 |
+| - | - | - | - | -- | - | -- | - | - | - | -- |
 
 
 ## MS2Tox package for predicting LC50 values from fingerprints 
