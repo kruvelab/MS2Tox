@@ -14,7 +14,7 @@ Before calculating toxicity values, SIRIUS+CSI:FingerID must be used for calcula
 
 For fingerprint calculation it is important that correct input files are dragged into SIRIUS+CSI:FingerID GUI. Example of the .ms file is shown in Figure 1. The first row must start with **>compound** and then after space can contain either name of the compound or unique id for the analysed peak/spectrum. **>parentmass** and **>ionization** are not mandatory but helpful for better identification. Row **>formula** can be added if known. Information from MS2 spectra are added after row **>collision** *collision value*. As SIRIUS+CSI:FingerID adds all the different MS2 spectra together before calculations it is not extremely important to add exactly correct collision energy values or even separate the spectra  (RAMP can be used as well) . For last part after **>ms1peaks** isotope pattern from MS1 spectrum can be added; however, this is not mandotory for calculations can improve the formula prediction. 
 
-@pildid
+![image](https://user-images.githubusercontent.com/68953270/153868916-528a8127-22a6-41f9-99c8-30880f7d18e9.png)
 
 **Figure 1.** On the left is example input file for SIRIUS+CSI:FingerID, on the right folder after fingerprint calculations that directory must be put into the function
 
