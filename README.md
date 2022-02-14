@@ -22,11 +22,8 @@ For fingerprint calculation it is important that correct input files are dragged
 
 **Figure 1.** Example input file for SIRIUS+CSI:FingerID
 
-![image](https://user-images.githubusercontent.com/68953270/153868996-770a007f-4f06-4dc5-bc9c-30fd57fc89cd.png)
 
-**Figure 2.** Folder after fingerprint calculations that directory must be put into the function
-
-For calculations .ms files can be dragged into the GUI. Before that new project directory must be established by clicking to icon New (see Fig 2A). This path to the directory will be used in final R function for calculations. After dragging .ms files into the application all the information about each file is listed on the left side in the application (Fig 2B). By clicking on Compute All button (Fig 2C) compute window (Fig 2D) opens. In this window parameters for calculations can be chosen. In this work for Orbitrap measurements mass deviation 5 ppm was chosen. Calculations may take time from few minutes to hours depending on the number of .ms files and molecular mass of the compounds. After calculations a subfolder per .ms file has been created and it contains calculated fingerprints, scores, fragmentation trees, etc. All output folders start with order number that is shown in the final table in column named “foldernumber”.
+For calculations .ms files can be dragged into the GUI. Before that new project directory must be established by clicking to icon New (see Fig 2A). This path to the directory will be used in final R function for calculations. After dragging .ms files into the application all the information about each file is listed on the left side in the application (Fig 2B). By clicking on Compute All button (Fig 2C) compute window (Fig 2D) opens. In this window parameters for calculations can be chosen. In this work for Orbitrap measurements mass deviation 5 ppm was chosen. Calculations may take time from few minutes to hours depending on the number of .ms files and molecular mass of the compounds. After calculations a subfolder per .ms file has been created and it contains calculated fingerprints, scores, fragmentation trees, etc. All output folders start with order number that is shown in the final table in column named “foldernumber”. See Fig  3. 
 
 ![image](https://user-images.githubusercontent.com/68953270/153869370-9aaa1fc3-4fdb-41eb-b504-53e41f391ee3.png)
 
@@ -41,6 +38,10 @@ For calculations .ms files can be dragged into the GUI. Before that new project 
 | Cl  | 18 |   | Se | 2 |   | Br | 10 |   | F | Inf |
 | I  | 6 |   | K | 1 |   | Na | 1 |   | As | 2 |
 
+
+![image](https://user-images.githubusercontent.com/68953270/153868996-770a007f-4f06-4dc5-bc9c-30fd57fc89cd.png)
+
+**Figure 3.** Folder after fingerprint calculations that directory must be put into the function
 
 
 ## *MS2Tox* package for predicting LC50 values from fingerprints 
