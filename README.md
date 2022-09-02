@@ -78,6 +78,8 @@ The main function links to other functions, which gather the fingerprint data (*
 In this work SIRIUS+CSI:FingerID version 4.9.5 was used so the prediction method is limited to these fingerprints. If newer or older versions do not calculate some of the fingerprints used here, the *FishLC50Prediction()* might not work . In this case please notify the author for retraining the model. 
 
 Code example:
+    
+    setwd(C:/Desktop/MS2TOX)  #Directory must be set to downloaded MS2Tox folder as trained model is located there
 
     folderwithSIRIUSfiles <- "C:/Desktop/Folder"  #Add your directory with SIRIUS calculated fingerprints
 
