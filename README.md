@@ -79,7 +79,7 @@ In this work SIRIUS+CSI:FingerID version 4.9.5 was used so the prediction method
 
 Code example:
     
-    setwd(C:/Desktop/MS2TOX)  #Directory must be set to downloaded MS2Tox folder as trained model is located there
+    setwd(C:/Desktop/MS2Tox)  #Directory must be set to downloaded MS2Tox folder as trained model is located there
 
     folderwithSIRIUSfiles <- "C:/Desktop/Folder"  #Add your directory with SIRIUS calculated fingerprints
 
