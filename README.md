@@ -1,5 +1,5 @@
 # MS2Tox
-MS2Tox is a machine learning tool for predicting ecotoxicity of unidentified chemicals in water by nontarget LC/HRMS
+MS2Tox is a machine learning tool for predicting ecotoxicity of unidentified chemicals in water by nontarget LC-HRMS
 
 Before using function *FishLC50Prediction(folderwithSIRIUSfiles, LC50mode)* fingerprints must be calculated with SIRIUS+CSI:FingerID application.
 
