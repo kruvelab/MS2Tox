@@ -4,6 +4,8 @@ MS2Tox is a machine learning tool for predicting ecotoxicity of unidentified che
 PS! Calculations are currently limited to [M+H]+, [M+Na]+, [M+K]+, [M-H]-, [M+Cl]- adducts
 
 Before using function *FishLC50Prediction(folderwithSIRIUSfiles, LC50mode)* fingerprints must be calculated with SIRIUS+CSI:FingerID application.
+Additionally LC50 can be calculated from structure using function *LC50fromSMILES(compoundslistwithSMILES, LC50mode)*. In this case input 
+table needs two columns with names SMILES and exactMass. PS! For code to work, column names should be written exactly like that. 
 
 Folder "Data" contains train, test and validation sets with calculated results. 
 
