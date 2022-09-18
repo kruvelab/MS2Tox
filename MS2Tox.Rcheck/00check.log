@@ -1,0 +1,22 @@
+* using log directory 'C:/Users/pipe0902/Kruvelab/Anneli Kruve - Toxicity project data/I article/Files to GitHub/MS2Tox/MS2Tox.Rcheck'
+* using R version 4.0.2 (2020-06-22)
+* using platform: x86_64-w64-mingw32 (64-bit)
+* using session charset: ISO8859-1
+* using options '--no-manual --as-cran'
+* checking for file 'MS2Tox/DESCRIPTION' ... OK
+* checking extension type ... Package
+* this is package 'MS2Tox' version '0.2.1'
+* package encoding: UTF-8
+* checking package namespace information ... OK
+* checking package dependencies ... OK
+* checking if this is a source package ... OK
+* checking if there is a namespace ... OK
+* checking for executable files ... OK
+* checking for hidden files and directories ... OK
+* checking for portable file names ... OK
+* checking serialization versions ... OK
+* checking whether package 'MS2Tox' can be installed ... ERROR
+Installation failed.
+See 'C:/Users/pipe0902/Kruvelab/Anneli Kruve - Toxicity project data/I article/Files to GitHub/MS2Tox/MS2Tox.Rcheck/00install.out' for details.
+* DONE
+Status: 1 ERROR
