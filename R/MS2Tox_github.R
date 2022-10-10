@@ -39,9 +39,9 @@ FishLC50Prediction <- function(folderwithSIRIUSfiles, LC50mode = "static") {
     #FishModel <- readRDS("R/20211126_fish_flow_finalapplic.rds")
     FishModel <- readRDS(system.file("models","20211126_fish_flow_finalapplic.rds", package = "MS2Tox"))
   } else{
-    error_message = 'LC50mode must me either "static" or "flow"'
+    error_message = 'LC50mode must be either "static" or "flow"'
   }
-  if (error_message != 'LC50mode must me either "static" or "flow"') {
+  if (error_message != 'LC50mode must be either "static" or "flow"') {
     inputtable <- FpTableForPredictions(folderwithSIRIUSfiles)
     predictions <- inputtable %>%
       mutate(LC50_predicted = predict(FishModel, newdata = inputtable)) %>%
@@ -50,11 +50,12 @@ FishLC50Prediction <- function(folderwithSIRIUSfiles, LC50mode = "static") {
     #return(predictions)
 
   } else {
-    print('LC50mode must me either static or flow')
-    predictions = "LC50mode must me either static or flow"
+    print('LC50mode must be either static or flow')
+    predictions = "LC50mode must be either static or flow"
   }
   return(predictions)
 }
+
 
 #' @export
 FpTableForPredictions <- function(folderwithSIRIUSfiles){
@@ -266,22 +267,21 @@ LC50fromSMILES <- function(compoundslistwithSMILES, LC50mode = "static"){
     #FishModel <- readRDS("R/20211126_fish_flow_finalapplic.rds")
     FishModel <- readRDS(system.file("models","20211126_fish_flow_finalapplic.rds", package = "MS2Tox"))
   } else{
-    error_message = 'LC50mode must me either "static" or "flow"'
+    error_message = 'LC50mode must be either "static" or "flow"'
   }
-  if (error_message != 'LC50mode must me either "static" or "flow"') {
+  if (error_message != 'LC50mode must be either "static" or "flow"') {
 
     inputtable <- SMILESFingerprints(compoundslistwithSMILES)
     predictions <- inputtable %>%
       mutate(LC50_predicted = predict(FishModel, newdata = inputtable)) %>%
       select(SMILES, LC50_predicted) %>%
       unique()
-    #return(predictions)
 
   } else {
-    print('LC50mode must me either static or flow')
-    predictions = "LC50mode must me either static or flow"
+    print('LC50mode must be either static or flow')
+    predictions = "LC50mode must be either static or flow"
   }
-
+  return(predictions)
 }
 
 
