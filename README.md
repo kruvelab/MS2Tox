@@ -1,4 +1,8 @@
 # MS2Tox
+
+UPDATING PROCESS GOING ON!
+In case of problems/questions -  pilleriin.peets@mmk.su.se or pilleriin.peets@gmail.com
+
 MS2Tox is a machine learning tool for predicting ecotoxicity of unidentified chemicals in water by nontarget LC-HRMS
 
 PS! Calculations are currently limited to [M+H]+, [M+Na]+, [M+K]+, [M-H]-, [M+Cl]- adducts
