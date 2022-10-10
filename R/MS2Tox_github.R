@@ -34,7 +34,7 @@ FishLC50Prediction <- function(folderwithSIRIUSfiles, LC50mode = "static") {
   error_message = ""
   if(mode == "static"){
     #FishModel <- readRDS("R/20211118_fish_stat_finalapplic.rds")
-    FishModel <- system.file("models", "20211118_fish_stat_finalapplic.rds", package = "MS2Tox")
+    FishModel <- readRDS(system.file("models", "20211118_fish_stat_finalapplic.rds", package = "MS2Tox"))
   } else if(mode == "flow"){
     #FishModel <- readRDS("R/20211126_fish_flow_finalapplic.rds")
     FishModel <- system.file("models","20211126_fish_flow_finalapplic.rds", package = "MS2Tox")
