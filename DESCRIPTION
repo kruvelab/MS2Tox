@@ -19,5 +19,7 @@ Imports:
   tibble,
   xgboost,
   tidyselect,
-  magrittr
+  magrittr,
+  rcdklibs,
+  rcdk
 RoxygenNote: 7.1.1
