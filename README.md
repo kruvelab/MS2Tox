@@ -1,8 +1,5 @@
 # MS2Tox
 
-UPDATING PROCESS GOING ON!
-In case of problems/questions -  pilleriin.peets@mmk.su.se or pilleriin.peets@gmail.com
-
 MS2Tox is a machine learning tool for predicting ecotoxicity of unidentified chemicals in water by nontarget LC-HRMS
 
 PS! Calculations are currently limited to [M+H]+, [M+Na]+, [M+K]+, [M-H]-, [M+Cl]- adducts
@@ -11,9 +8,7 @@ Before using function *FishLC50Prediction(folderwithSIRIUSfiles, LC50mode)* fing
 Additionally LC50 can be calculated from structure using function *LC50fromSMILES(compoundslistwithSMILES, LC50mode)*. In this case input 
 table needs two columns with names SMILES and exactMass. PS! For code to work, column names should be written exactly like that. 
 
-Folder "Data" contains train, test and validation sets with calculated results. 
-
-Folder "MS2Tox" is R package folder containing all the needed files for using the package *MS2Tox* in R.
+Folder "ModelsData" contains train, test and validation sets with calculated results. 
 
 Folder "Example data" contains SIRIUS+CSI:FingerID calculated fingerprints for testing if the code works.
 
