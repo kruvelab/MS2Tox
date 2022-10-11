@@ -53,6 +53,7 @@ For calculations .ms files can be dragged into the GUI. Before that new project 
 R package *MS2Tox* can be then used for toxicity value predictions. For installing R-package: 
 
     remotes::install_github("kruvelab/MS2Tox")
+    library(MS2Tox)
 
 Before installing *MS2Tox* package *Rdisop* is needed to be installed. To install this package, start R (version "4.1") and enter:
 
