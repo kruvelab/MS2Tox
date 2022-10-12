@@ -21,6 +21,8 @@
 #' @import tidyselect
 #' @import rcdklibs
 #' @import rcdk
+#' @import stats
+#' @import utils
 #' @importFrom magrittr %>%
 
 
@@ -30,6 +32,7 @@
 
 #' @export
 FishLC50Prediction <- function(folderwithSIRIUSfiles, LC50mode = "static") {
+
   mode <- LC50mode
   error_message = ""
   if(mode == "static"){
@@ -756,3 +759,25 @@ SMILESFingerprints <- function(compoundslistwithSMILES){
 
 
 
+
+# opening zip files for SIRIUS 5
+
+#' @export
+OpenZip_SIRIUS5 <- function(folderwithSIRIUSfiles) {
+  subfolder_fp_zip <- dir(folderwithSIRIUSfiles, all.files = TRUE, recursive = TRUE, pattern = "fingerprints")
+
+  for (zipF in subfolder_fp_zip){
+    outfolder <- str_split(zipF, "/")[[1]][1]
+    outDir <- paste(folderwithSIRIUSfiles, outfolder, "fingerprints1", sep = "/")
+    unzip(zipF, exdir=outDir)
+  }
+
+
+  subfolder_scores_zip <- dir(folderwithSIRIUSfiles, all.files = TRUE, recursive = TRUE, pattern = "scores")
+
+  for (zipF in subfolder_scores_zip){
+    outfolder <- str_split(zipF, "/")[[1]][1]
+    outDir <- paste(folderwithSIRIUSfiles, outfolder, "scores1", sep = "/")
+    unzip(zipF, exdir=outDir)
+  }
+}
