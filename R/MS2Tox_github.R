@@ -768,16 +768,20 @@ UnZip_SIRIUS5 <- function(folderwithSIRIUSfiles) {
 
   for (zipF in subfolder_fp_zip){
     outfolder <- str_split(zipF, "/")[[1]][1]
-    outDir <- paste(folderwithSIRIUSfiles, outfolder, "fingerprints1", sep = "/")
-    unzip(zipF, exdir=outDir)
+    outDir <- paste(folderwithSIRIUSfiles, outfolder, "fingerprints1",
+                    sep = "/")
+    zipFile <- paste(folderwithSIRIUSfiles, zipF, sep = "/")
+    unzip(zipFile, exdir = outDir)
   }
 
 
   subfolder_scores_zip <- dir(folderwithSIRIUSfiles, all.files = TRUE, recursive = TRUE, pattern = "scores")
 
-  for (zipF in subfolder_scores_zip){
+  for (zipF in subfolder_scores_zip) {
     outfolder <- str_split(zipF, "/")[[1]][1]
-    outDir <- paste(folderwithSIRIUSfiles, outfolder, "scores1", sep = "/")
-    unzip(zipF, exdir=outDir)
+    outDir <- paste(folderwithSIRIUSfiles, outfolder, "scores1",
+                    sep = "/")
+    zipFile <- paste(folderwithSIRIUSfiles, zipF, sep = "/")
+    unzip(zipFile, exdir = outDir)
   }
 }
