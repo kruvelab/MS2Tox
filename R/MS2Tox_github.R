@@ -763,7 +763,7 @@ SMILESFingerprints <- function(compoundslistwithSMILES){
 # opening zip files for SIRIUS 5
 
 #' @export
-OpenZip_SIRIUS5 <- function(folderwithSIRIUSfiles) {
+UnZip_SIRIUS5 <- function(folderwithSIRIUSfiles) {
   subfolder_fp_zip <- dir(folderwithSIRIUSfiles, all.files = TRUE, recursive = TRUE, pattern = "fingerprints")
 
   for (zipF in subfolder_fp_zip){
