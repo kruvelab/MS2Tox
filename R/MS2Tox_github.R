@@ -245,6 +245,7 @@ SiriusScoreRank1 <- function(subfolder_score, folderwithSIRIUSfiles){
     group_by(id, foldernumber) %>%
     arrange(desc(siriusscore)) %>%
     mutate(rank = row_number()) %>%
+    mutate(rank = as.numeric(rank)) %>%
     ungroup() %>%
     left_join(scores_table %>% unique() %>%  mutate(siriusscore = as.numeric(siriusscore)), by = c("id", "foldernumber", "siriusscore")) %>%
     filter(rank == 1) %>%
