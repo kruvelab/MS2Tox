@@ -245,10 +245,9 @@ SiriusScoreRank1 <- function(subfolder_score, folderwithSIRIUSfiles){
     group_by(id, foldernumber) %>%
     arrange(desc(siriusscore)) %>%
     mutate(rank = row_number()) %>%
-    mutate(rank = as.numeric(rank)) %>%
     ungroup() %>%
     left_join(scores_table %>% unique() %>%  mutate(siriusscore = as.numeric(siriusscore)), by = c("id", "foldernumber", "siriusscore")) %>%
-    filter(rank == 1) %>%
+    dplyr::filter(rank == 1) %>%
     select(-rank, -siriusscore) %>%
     unique()
 
@@ -348,7 +347,7 @@ SMILESFingerprints <- function(compoundslistwithSMILES){
   substr_table[is.na(substr_table)] <- 0
 
   substr_table <- substr_table %>%
-    filter(rowname != "row")
+    dplyr::filter(rowname != "row")
 
   names(substr_table) <- c("SMILES", col_names_substr)
 
@@ -400,7 +399,7 @@ SMILESFingerprints <- function(compoundslistwithSMILES){
   maccs_table[is.na(maccs_table)] <- 0
 
   maccs_table <- maccs_table %>%
-    filter(rowname != "row")
+    dplyr::filter(rowname != "row")
 
   names(maccs_table) <- c("SMILES", col_names_maccs)
 
@@ -453,7 +452,7 @@ SMILESFingerprints <- function(compoundslistwithSMILES){
   pubchem_table[is.na(pubchem_table)] <- 0
 
   pubchem_table <- pubchem_table %>%
-    filter(rowname != "row")
+    dplyr::filter(rowname != "row")
 
   names(pubchem_table) <- c("SMILES", col_names_pubchem)
 
@@ -507,7 +506,7 @@ SMILESFingerprints <- function(compoundslistwithSMILES){
   KlekotaRoth_table[is.na(KlekotaRoth_table)] <- 0
 
   KlekotaRoth_table <- KlekotaRoth_table %>%
-    filter(rowname != "row")
+    dplyr::filter(rowname != "row")
 
   names(KlekotaRoth_table) <- c("SMILES", col_names_KlekotaRoth)
 
@@ -644,7 +643,7 @@ SMILESFingerprints <- function(compoundslistwithSMILES){
   custom_table[is.na(custom_table)] <- 0
 
   custom_table <- custom_table %>%
-    filter(rowname != "row")
+    dplyr::filter(rowname != "row")
 
   names(custom_table) <- c("SMILES", col_names_custom)
 
@@ -742,7 +741,7 @@ SMILESFingerprints <- function(compoundslistwithSMILES){
   ring_table[is.na(ring_table)] <- 0
 
   ring_table <- ring_table %>%
-    filter(rowname != "row")
+    dplyr::filter(rowname != "row")
 
   names(ring_table) <- c("SMILES", col_names_ring)
 
