@@ -4,7 +4,7 @@ MS2Tox is a machine learning tool for predicting ecotoxicity of unidentified che
 
 For installing R-package: 
 
-    remotes::install_github("kruvelab/MS2Tox")
+    remotes::install_github("kruvelab/MS2Tox", INSTALL_opts="--no-multiarch")
     library(MS2Tox)
 
 Before installing *MS2Tox* package *Rdisop* is needed to be installed. To install this package, start R (version "4.1") and enter:
