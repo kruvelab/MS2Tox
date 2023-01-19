@@ -31,7 +31,7 @@
 #Predictions can be made either for static or flow-through mode
 
 #' @export
-FishLC50Prediction <- function(folderwithSIRIUSfiles, LC50mode = "static") {
+FishLC50Prediction <- function(fingerprints, LC50mode = "static") {
 
   mode <- LC50mode
   error_message = ""
@@ -45,7 +45,10 @@ FishLC50Prediction <- function(folderwithSIRIUSfiles, LC50mode = "static") {
     error_message = 'LC50mode must be either "static" or "flow"'
   }
   if (error_message != 'LC50mode must be either "static" or "flow"') {
-    inputtable <- FpTableForPredictions(folderwithSIRIUSfiles)
+    if (is.character(fingerprints))
+      inputtable <- FpTableForPredictions(fingerprints)
+    else
+      inputtable <- fingerprints
     predictions <- inputtable %>%
       mutate(LC50_predicted = predict(FishModel, newdata = inputtable)) %>%
       select(id, foldernumber, LC50_predicted, predform, predion) %>%
