@@ -155,6 +155,11 @@ FingerPrintTable <- function(subfolder, fp_names_pos, fp_names_neg, fp_names_com
 #' @export
 FingerPrintTablePOS <- function(subfolder, folderwithSIRIUSfiles){
   fingerprint_data <- tibble()
+
+  # options for progress bar
+  options(width = 80)
+  n <- length(subfolder)
+  
   for(direct in subfolder){
 # subfolder with data must be on a form where id is on second place after nr_ (0_Einc270001_Einc270001)
     file_name <- str_split(direct, "_")
@@ -179,7 +184,18 @@ FingerPrintTablePOS <- function(subfolder, folderwithSIRIUSfiles){
       mutate(predform = sub("\\_.*", "", predion))
     fingerprint_data <- fingerprint_data %>%
       bind_rows(filedata)
-  }
+
+    # add progress bar
+    extra <- nchar('||100%')
+    width <- options()$width
+    step <- round(direct / n * (width - extra))
+    text <- sprintf('|%s%s|% 3s%%', strrep('=', step),
+                    strrep(' ', width - step - extra), round(direct / n * 100))
+    cat(text)
+    Sys.sleep(0.05)
+    cat(if (direct == n) '\n' else '\014')
+      
+    }
   return(fingerprint_data)
 }
 
