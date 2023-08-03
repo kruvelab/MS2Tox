@@ -158,6 +158,7 @@ FingerPrintTablePOS <- function(subfolder, folderwithSIRIUSfiles){
 
   # options for progress bar
   options(width = 80)
+  ii <- 1
   n <- length(subfolder)
   
   for(direct in subfolder){
@@ -188,12 +189,13 @@ FingerPrintTablePOS <- function(subfolder, folderwithSIRIUSfiles){
     # add progress bar
     extra <- nchar('||100%')
     width <- options()$width
-    step <- round(direct / n * (width - extra))
+    step <- round(ii / n * (width - extra))
     text <- sprintf('|%s%s|% 3s%%', strrep('=', step),
-                    strrep(' ', width - step - extra), round(direct / n * 100))
+                    strrep(' ', width - step - extra), round(ii / n * 100))
     cat(text)
     Sys.sleep(0.05)
-    cat(if (direct == n) '\n' else '\014')
+    cat(if (ii == n) '\n' else '\014')
+    ii = ii + 1
       
     }
   return(fingerprint_data)
