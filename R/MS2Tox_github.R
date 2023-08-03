@@ -68,8 +68,8 @@ FpTableForPredictions <- function(folderwithSIRIUSfiles){
   subfolder <- dir(folderwithSIRIUSfiles, all.files = TRUE, recursive = TRUE, pattern = ".fpt")
   subfolder_score <- dir(folderwithSIRIUSfiles, all.files = TRUE, recursive = TRUE, pattern = ".info")
 
-  fp_names_pos <- paste("Un", read_delim(paste(folderwithSIRIUSfiles,"/csi_fingerid.tsv", sep = ""), delim = "\t")$absoluteIndex, sep = "")
-  fp_names_neg <- paste("Un", read_delim(paste(folderwithSIRIUSfiles,"/csi_fingerid_neg.tsv", sep = "" ), delim = "\t")$absoluteIndex, sep = "")
+  fp_names_pos <- paste("Un", read_delim(paste(folderwithSIRIUSfiles,"/csi_fingerid.tsv", sep = ""), delim = "\t", show_col_types = FALSE)$absoluteIndex, sep = "")
+  fp_names_neg <- paste("Un", read_delim(paste(folderwithSIRIUSfiles,"/csi_fingerid_neg.tsv", sep = "" ), delim = "\t", show_col_types = FALSE)$absoluteIndex, sep = "")
   fp_names_common <- as.data.frame(fp_names_pos)  %>%
     mutate(fp_names_neg = fp_names_pos) %>%
     inner_join(as.data.frame(fp_names_neg))
