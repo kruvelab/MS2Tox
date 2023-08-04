@@ -156,7 +156,11 @@ FingerPrintTable <- function(subfolder, fp_names_pos, fp_names_neg, fp_names_com
 #' @export
 FingerPrintTablePOS <- function(subfolder, folderwithSIRIUSfiles){
   fingerprint_data <- tibble()
-  
+
+  # progress bar
+  ii = 1
+  pb <- txtProgressBar(min = 0, max = length(subfolder), initial = 0)
+
   for(direct in subfolder){
 # subfolder with data must be on a form where id is on second place after nr_ (0_Einc270001_Einc270001)
     file_name <- str_split(direct, "_")
@@ -171,7 +175,7 @@ FingerPrintTablePOS <- function(subfolder, folderwithSIRIUSfiles){
     
     pred_ion <- comp_name[[1]][3]
     # changed from readr::read_delim to utils::read.delim due to verbose output
-    filedata <- read.delim(paste(folderwithSIRIUSfiles, direct, sep = "/"), sep = " ")
+    filedata <- read.delim(paste(folderwithSIRIUSfiles, direct, sep = "/"), sep = " ", header = FALSE)
     filedata <- as_tibble(t(filedata))
     filedata <- filedata %>%
       mutate(predion = pred_ion) %>%
@@ -181,7 +185,14 @@ FingerPrintTablePOS <- function(subfolder, folderwithSIRIUSfiles){
       mutate(predform = sub("\\_.*", "", predion))
     fingerprint_data <- fingerprint_data %>%
       bind_rows(filedata)
+
+    # update progress bar
+    Sys.sleep(0.5); setTxtProgressBar(pb, ii)
+    ii = ii + 1
+    
     }
+  Sys.sleep(1)
+  close(pb)
   return(fingerprint_data)
 }
 
@@ -203,7 +214,7 @@ FingerPrintTableNEG <- function(subfolder, folderwithSIRIUSfiles){
       pred_ion <- comp_name[[1]][3]
 
       # changed from readr::read_delim to utils::read.delim due to verbose output
-      filedata <- read.delim(paste(folderwithSIRIUSfiles, direct, sep = "/"), sep = " ")
+      filedata <- read.delim(paste(folderwithSIRIUSfiles, direct, sep = "/"), sep = " ", header = FALSE)
       filedata <- as_tibble(t(filedata))
       filedata <- filedata %>%
         mutate(predion = pred_ion) %>%
