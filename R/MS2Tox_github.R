@@ -159,6 +159,7 @@ FingerPrintTablePOS <- function(subfolder, folderwithSIRIUSfiles){
 
   # progress bar
   ii = 1
+  print("Reading in positive mode SIRIUS files ...")
   pb <- txtProgressBar(min = 0, max = length(subfolder), initial = 0, style = 3)
 
   for(direct in subfolder){
@@ -199,6 +200,12 @@ FingerPrintTablePOS <- function(subfolder, folderwithSIRIUSfiles){
 #' @export
 FingerPrintTableNEG <- function(subfolder, folderwithSIRIUSfiles){
   fingerprint_data <- tibble()
+
+  # progress bar
+  ii = 1
+  print("Reading in negative mode SIRIUS files ...")
+  pb <- txtProgressBar(min = 0, max = length(subfolder), initial = 0, style = 3)
+  
   for(direct in subfolder){
 # subfolder with data must be on a form where id is on second place after nr_ (0_Einc270001_Einc270001)
       file_name <- str_split(direct, "_")
@@ -224,8 +231,14 @@ FingerPrintTableNEG <- function(subfolder, folderwithSIRIUSfiles){
         mutate(predform = sub("\\_.*", "", predion))
       fingerprint_data <- fingerprint_data %>%
         bind_rows(filedata)
-
-  }
+    
+    # update progress bar
+    setTxtProgressBar(pb, ii)
+    ii = ii + 1
+    
+    }
+  Sys.sleep(1)
+  close(pb)
   return(fingerprint_data)
 }
 
@@ -246,9 +259,9 @@ SiriusScoreRank1 <- function(subfolder_score, folderwithSIRIUSfiles){
       foldernumber <- file_name_score[[1]][1]
       
       # detect patRoon featureID and parse to output
-      if (str_detect(file_name[[1]][2], "M") & str_detect(file_name[[1]][3], "R")) {
-        id <- str_c(file_name[[1]][2], file_name[[1]][3], file_name[[1]][4], sep = "_")
-      } else id <- file_name[[1]][2]
+      if (str_detect(file_name_score[[1]][2], "M") & str_detect(file_name_score[[1]][3], "R")) {
+        id <- str_c(file_name_score[[1]][2], file_name_score[[1]][3], file_name_score[[1]][4], sep = "_")
+      } else id <- file_name_score[[1]][2]
       
       pred_st <- comp_name_score[[1]][3]
 
