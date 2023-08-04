@@ -155,6 +155,7 @@ FingerPrintTable <- function(subfolder, fp_names_pos, fp_names_neg, fp_names_com
 FingerPrintTablePOS <- function(subfolder, folderwithSIRIUSfiles){
   fingerprint_data <- tibble()
 
+  if (length(subfolder) > 0 ){
   # progress bar
   ii = 1
   print("Reading in positive mode SIRIUS files ...")
@@ -194,11 +195,13 @@ FingerPrintTablePOS <- function(subfolder, folderwithSIRIUSfiles){
   close(pb)
   return(fingerprint_data)
 }
+  } else return fingerprint_data
 
 #' @export
 FingerPrintTableNEG <- function(subfolder, folderwithSIRIUSfiles){
   fingerprint_data <- tibble()
 
+  if (length(subfolder) > 0){
   # progress bar
   ii = 1
   print("Reading in negative mode SIRIUS files ...")
@@ -239,6 +242,7 @@ FingerPrintTableNEG <- function(subfolder, folderwithSIRIUSfiles){
   close(pb)
   return(fingerprint_data)
 }
+  } else return(fingerprint_data)
 
 #' @export
 SiriusScoreRank1 <- function(subfolder_score, folderwithSIRIUSfiles){
