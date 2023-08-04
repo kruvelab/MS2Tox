@@ -68,8 +68,9 @@ FpTableForPredictions <- function(folderwithSIRIUSfiles){
   subfolder <- dir(folderwithSIRIUSfiles, all.files = TRUE, recursive = TRUE, pattern = ".fpt")
   subfolder_score <- dir(folderwithSIRIUSfiles, all.files = TRUE, recursive = TRUE, pattern = ".info")
 
-  fp_names_pos <- paste("Un", read_delim(paste(folderwithSIRIUSfiles,"/csi_fingerid.tsv", sep = ""), delim = "\t", show_col_types = FALSE)$absoluteIndex, sep = "")
-  fp_names_neg <- paste("Un", read_delim(paste(folderwithSIRIUSfiles,"/csi_fingerid_neg.tsv", sep = "" ), delim = "\t", show_col_types = FALSE)$absoluteIndex, sep = "")
+  # changed from readr::read_delim to utils::read.delim due to verbose output
+  fp_names_pos <- paste("Un", read.delim(paste(folderwithSIRIUSfiles,"/csi_fingerid.tsv", sep = ""), sep = "\t")$absoluteIndex, sep = "")
+  fp_names_neg <- paste("Un", read.delim(paste(folderwithSIRIUSfiles,"/csi_fingerid_neg.tsv", sep = "" ), sep = "\t")$absoluteIndex, sep = "")
   fp_names_common <- as.data.frame(fp_names_pos)  %>%
     mutate(fp_names_neg = fp_names_pos) %>%
     inner_join(as.data.frame(fp_names_neg))
@@ -174,8 +175,8 @@ FingerPrintTablePOS <- function(subfolder, folderwithSIRIUSfiles){
     } else id_this <- file_name[[1]][2]
     
     pred_ion <- comp_name[[1]][3]
-
-    filedata <- read_delim(paste(folderwithSIRIUSfiles, direct, sep = "/"), delim = " ", col_names = FALSE, show_col_types = FALSE)
+    # changed from readr::read_delim to utils::read.delim due to verbose output
+    filedata <- read.delim(paste(folderwithSIRIUSfiles, direct, sep = "/"), sep = " ")
     filedata <- as_tibble(t(filedata))
     filedata <- filedata %>%
       mutate(predion = pred_ion) %>%
@@ -218,7 +219,8 @@ FingerPrintTableNEG <- function(subfolder, folderwithSIRIUSfiles){
     
       pred_ion <- comp_name[[1]][3]
 
-      filedata <- read_delim(paste(folderwithSIRIUSfiles, direct, sep = "/"), delim = " ", col_names = FALSE, show_col_types = FALSE)
+      # changed from readr::read_delim to utils::read.delim due to verbose output
+      filedata <- read.delim(paste(folderwithSIRIUSfiles, direct, sep = "/"), sep = " ")
       filedata <- as_tibble(t(filedata))
       filedata <- filedata %>%
         mutate(predion = pred_ion) %>%
@@ -248,7 +250,12 @@ SiriusScoreRank1 <- function(subfolder_score, folderwithSIRIUSfiles){
       comp_name_score <- str_split(filename, "/")
 
       foldernumber <- file_name_score[[1]][1]
-      id <- file_name_score[[1]][2] #if id is not in second place, [2] must be changed
+      
+      # detect patRoon featureID and parse to output
+      if (str_detect(file_name[[1]][2], "M") & str_detect(file_name[[1]][3], "R")) {
+        id <- str_c(file_name[[1]][2], file_name[[1]][3], file_name[[1]][4], sep = "_")
+      } else id <- file_name[[1]][2]
+      
       pred_st <- comp_name_score[[1]][3]
 
       fileConnection <- file(paste(folderwithSIRIUSfiles, filename, sep = "/"))
