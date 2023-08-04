@@ -156,10 +156,10 @@ FingerPrintTablePOS <- function(subfolder, folderwithSIRIUSfiles){
   
   fingerprint_data <- tibble()
 
-  if (length(subfolder) > 0 ){
-    # progress bar
+  if (length(subfolder) > 0){
+    # initialise progress bar
+    printf(paste0("Found", length(subfolder), "positive mode SIRIUS files", sep = " "))
     ii = 1
-    print("Reading in positive mode SIRIUS files ...")
     pb <- txtProgressBar(min = 0, max = length(subfolder), initial = 0, style = 3)
 
     for(direct in subfolder){
@@ -192,9 +192,11 @@ FingerPrintTablePOS <- function(subfolder, folderwithSIRIUSfiles){
       ii = ii + 1
     
       }
-    Sys.sleep(1)
+
     close(pb)
+    printf("Done!")
     return(fingerprint_data)
+    
   } else return(fingerprint_data)
 }
 
@@ -206,7 +208,7 @@ FingerPrintTableNEG <- function(subfolder, folderwithSIRIUSfiles){
   if (length(subfolder) > 0){
     # progress bar
     ii = 1
-    print("Reading in negative mode SIRIUS files ...")
+    printf(paste0("Found", length(subfolder), "negative mode SIRIUS files", sep = " "))
     pb <- txtProgressBar(min = 0, max = length(subfolder), initial = 0, style = 3)
   
     for(direct in subfolder){
@@ -240,9 +242,10 @@ FingerPrintTableNEG <- function(subfolder, folderwithSIRIUSfiles){
     ii = ii + 1
     
     }
-  Sys.sleep(1)
+  
   close(pb)
-  return(fingerprint_data)
+  printf("Done!")
+    return(fingerprint_data)
 } else return(fingerprint_data)
   }
 
