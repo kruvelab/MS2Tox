@@ -111,12 +111,12 @@ FingerPrintTable <- function(subfolder, fp_names_pos, fp_names_neg, fp_names_com
     }
   }
 
-  if(length(subfolder_pos) != 0){
+  if(!is.null(subfolder_pos){
     fp_pos <- FingerPrintTablePOS(subfolder_pos, folderwithSIRIUSfiles)
     colnames(fp_pos) <- c(fp_names_pos, "predion", "id", "foldernumber", "predform")
   }
 
-  if(length(subfolder_neg) != 0){
+  if(!is.null(subfolder_neg){
     fp_neg <- FingerPrintTableNEG(subfolder_neg, folderwithSIRIUSfiles)
     colnames(fp_neg) <- c(fp_names_neg, "predion", "id", "foldernumber", "predform")
   }
