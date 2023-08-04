@@ -195,7 +195,7 @@ FingerPrintTablePOS <- function(subfolder, folderwithSIRIUSfiles){
     Sys.sleep(1)
     close(pb)
     return(fingerprint_data)
-  } else return fingerprint_data
+  } else return(fingerprint_data)
 }
 
 #' @export
