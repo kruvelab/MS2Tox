@@ -159,7 +159,7 @@ FingerPrintTablePOS <- function(subfolder, folderwithSIRIUSfiles){
 
   # progress bar
   ii = 1
-  pb <- txtProgressBar(min = 0, max = length(subfolder), initial = 0)
+  pb <- txtProgressBar(min = 0, max = length(subfolder), initial = 0, style = 3)
 
   for(direct in subfolder){
 # subfolder with data must be on a form where id is on second place after nr_ (0_Einc270001_Einc270001)
@@ -187,7 +187,7 @@ FingerPrintTablePOS <- function(subfolder, folderwithSIRIUSfiles){
       bind_rows(filedata)
 
     # update progress bar
-    Sys.sleep(0.5); setTxtProgressBar(pb, ii)
+    setTxtProgressBar(pb, ii)
     ii = ii + 1
     
     }
