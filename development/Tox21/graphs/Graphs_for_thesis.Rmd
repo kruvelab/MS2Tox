@@ -1,0 +1,680 @@
+---
+title: "GRAPHS"
+author: "Ida Rahu"
+date: "2023-03-11"
+output: html_document
+---
+```{r}
+library(ggplot2)
+library(dplyr)
+library(scales)
+library(gridExtra)
+library(data.table)
+library(forcats)
+library(viridis)
+library(tidyr)
+library(cowplot)
+library(stringr)
+library(caret)
+```
+
+```{r}
+theme_signature <- function() {
+  theme_minimal(base_size = 12, base_family = "sans") +
+    theme(
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      axis.line = element_line(size = .13, color = '#343434'),
+      axis.text = element_text(color = "#343434"),
+      axis.ticks.x = element_line(size = 0.5, color = '#343434'),
+      axis.ticks.y = element_line(size = 0.5, color = '#343434'),
+      axis.title = element_text(color = "#343434"),
+      axis.title.y = element_text(hjust = 1, margin = margin(0, 6, 0, 15, "pt")),
+      axis.title.x = element_text(hjust = 0, margin = margin(6, 0, 15, 0, "pt")),
+      plot.subtitle = element_text(color = "black", size= 11),
+      plot.title = element_text(color = "black", size= 20), 
+      plot.caption = element_text(hjust = 0, color = "black"),
+      plot.margin = margin(.5,.5,.5,.5,"cm"),
+      plot.background = element_rect(fill = "white", color = 'white'),
+      legend.text = element_text(color = "#343434"),
+      legend.title = element_text(color = "#343434"),
+      strip.text = element_text(color = "black")) 
+}
+```
+
+
+```{r}
+# Dose-response graphs
+# Generating data
+set.seed(123)
+x <- rlnorm(5000, meanlog = 0, sdlog = 1)
+
+# Frequency-response plot
+freq_plot <- ggplot(data = data.frame(x), aes(x)) +
+  geom_histogram(aes(y =..density..), bins = 20, color = "#343434", fill = "#e1e1e1") +
+  geom_density(color='#CB3D74', size=1.5) +
+  scale_x_log10(limits = c(0.01, 100), breaks = c(0.01, 0.1, 1, 10, 100), labels = c(0.01, 0.1, 1, 10, 100)) +
+  scale_y_continuous(labels = percent) +
+  xlab("dose (mg/kg)") +
+  ylab("frequency response (%)") +
+  theme_signature()
+
+
+# Cumulative-response plot
+cumul_plot <- ggplot(data = data.frame(x), aes(x)) +
+  stat_ecdf(color='#CB3D74', size=1.5) +
+  scale_x_log10(limits = c(0.01, 100), breaks = c(0.01, 0.1, 1, 10, 100), labels = c(0.01, 0.1, 1, 10, 100)) +
+  scale_y_continuous(labels = percent) +
+  xlab("dose (mg/kg)") +
+  ylab("cumulative response (%)") +
+  theme_signature()
+
+plot <- grid.arrange(freq_plot, cumul_plot, nrow = 1)
+ggsave('dose_response_graphs.png', plot,  dpi=600, width=10, height=5)
+```
+
+```{r}
+# Important values in toxicity
+# Generating data
+set.seed(123)
+x <- rlnorm(5000, meanlog = 0, sdlog = 1)
+df <- data.frame(x)
+
+# Finding NOAEL, LOAEL and LD50
+noael_threshold <- 0.05
+df$linear_x <- exp(df$x)
+df$cumulative_response <- ecdf(df$linear_x)(df$linear_x)
+noael_index <- max(which(df$cumulative_response < noael_threshold))
+noael_log <- log(df$linear_x[noael_index])
+
+cumulative_response <- ecdf(x)
+LD50 <- approx(cumulative_response(x), x, xout = 0.5)
+
+pct <- ecdf(x)
+baseline <- pct(0.01)
+doses <- 10^seq(log10(0.01), log10(100), length.out = 100)
+responses <- pct(doses)
+diffs <- responses - baseline
+loael_idx <- min(which(diffs >= 0.05))
+loael <- doses[loael_idx]
+
+cumul_plot2 <- ggplot(data = data.frame(x), aes(x)) +
+  stat_ecdf(color='#e1e1e1', size=1.5) +
+  scale_x_log10(limits = c(0.01, 100), breaks = c(0.01, 0.1, 1, 10, 100), labels = c(0.01, 0.1, 1, 10, 100)) +
+  scale_y_continuous(labels = percent) +
+  geom_point(aes(x=LD50$y, y=0.5), size=4, color='#CB3D74', alpha=0.5) +
+  geom_text(aes(x=LD50$y+0.75, y=0.5), label = expression(paste("LD"[50])), color='#CB3D74') +
+  
+  geom_point(aes(x=0.1, y=0.01), size=4, color='#00BF63') +
+  geom_text(aes(x=0.1, y=0.075), label = 'NOAEL', color='#00BF63') +
+  
+  geom_point(aes(x=loael, y=0.06), size=4, color='#F0BE40') +
+  geom_text(aes(x=loael+0.2, y=0.06), label = 'LOAEL', color='#F0BE40') +
+  
+  xlab("dose (mg/kg)") +
+  ylab("cumulative response (%)") +
+  theme_signature()
+cumul_plot2
+ggsave('thresholds.png', dpi=600, width=9, height=4)
+```
+
+```{r}
+# Original dataset, train/test set and real-life test set
+original <- as.data.frame(fread('C:/Users/idarahu/Desktop/Master/final_data_ready.tsv', header=T, sep='\t'))
+train_test <- as.data.frame(fread('C:/Users/idarahu/Desktop/Master/filtered_train_test_09.tsv', header=T, sep='\t'))
+train <- as.data.frame(fread('C:/Users/idarahu/Desktop/Master/train_filtered_09.tsv', header=T, sep='\t'))
+test <- as.data.frame(fread('C:/Users/idarahu/Desktop/Master/test_filtered_09.tsv', header=T, sep='\t'))
+real_life <- as.data.frame(fread('C:/Users/idarahu/Desktop/Master/real_life_test_set_ready.tsv', header=T, sep='\t'))
+
+data_summary1 <- data.frame(matrix(nrow=0, ncol=4))
+data_summary2 <- data.frame(matrix(nrow=0, ncol=4))
+data_summary3 <- data.frame(matrix(nrow=0, ncol=4))
+data_summary4 <- data.frame(matrix(nrow=0, ncol=4))
+data_summary5 <- data.frame(matrix(nrow=0, ncol=4))
+
+files_smiles <- list.files('C:/Users/idarahu/Desktop/Master/SMILES', pattern='*.smiles', full.names=T)
+
+tox_names <- tools::file_path_sans_ext(lapply(files_smiles, basename))
+tox_names <- gsub('-', '.', tox_names)
+
+
+for (i in 2:13) {
+  dat1 <- cbind(tox=tox_names[i-1], t(table(original[, i], useNA='always')))
+  data_summary1 <- rbind(data_summary1, dat1)
+}  
+for (i in 2:13) {
+  dat2 <- cbind(tox=tox_names[i-1], t(table(train_test[, i], useNA='always')))
+  data_summary2 <- rbind(data_summary2, dat2)
+} 
+for (i in 2:13) {
+  dat3 <- cbind(tox=tox_names[i-1], t(table(train[, i])))
+  data_summary3 <- rbind(data_summary3, dat3)
+}  
+for (i in 2:13) {
+  dat4 <- cbind(tox=tox_names[i-1], t(table(test[, i])))
+  data_summary4 <- rbind(data_summary4, dat4)
+}
+for (i in 3:14) {
+  dat5 <- cbind(tox=tox_names[i-2], t(table(real_life[, i], useNA='always')))
+  data_summary5 <- rbind(data_summary5, dat5)
+}
+
+colnames(data_summary1) <- c('tox_name', 'non_active_full', 'active_full', 'missing_full')
+colnames(data_summary2) <- c('tox_name', 'non_active_full', 'active_full', 'missing_full')
+colnames(data_summary3) <- c('tox_name', 'non_active_full', 'active_full', 'missing_full')
+colnames(data_summary4) <- c('tox_name', 'non_active_full', 'active_full', 'missing_full')
+colnames(data_summary5) <- c('tox_name', 'non_active_full', 'active_full', 'missing_full')
+
+data_summary1 <- as.data.frame(pivot_longer(data_summary1, cols = c("non_active_full", "active_full", "missing_full"),
+                         names_to = "condition", values_to = "amount"))
+
+data_summary1$amount <- as.numeric(data_summary1$amount)
+
+
+data_summary2 <- as.data.frame(pivot_longer(data_summary2, cols = c("non_active_full", "active_full", "missing_full"),
+                         names_to = "condition", values_to = "amount"))
+
+data_summary2$amount <- as.numeric(data_summary2$amount)
+
+data_summary3 <- as.data.frame(pivot_longer(data_summary3, cols = c("non_active_full", "active_full", "missing_full"),
+                         names_to = "condition", values_to = "amount"))
+
+data_summary3$amount <- as.numeric(data_summary3$amount)
+
+data_summary4 <- as.data.frame(pivot_longer(data_summary4, cols = c("non_active_full", "active_full", "missing_full"),
+                         names_to = "condition", values_to = "amount"))
+
+data_summary4$amount <- as.numeric(data_summary4$amount)
+
+data_summary5 <- as.data.frame(pivot_longer(data_summary5, cols = c("non_active_full", "active_full", "missing_full"),
+                         names_to = "condition", values_to = "amount"))
+
+data_summary5$amount <- as.numeric(data_summary5$amount)
+
+data_summary1 <- data_summary1 %>% arrange(tox_name, condition)
+data_summary2 <- data_summary2 %>% arrange(tox_name, condition)
+data_summary3 <- data_summary3 %>% arrange(tox_name, condition)
+data_summary4 <- data_summary4 %>% arrange(tox_name, condition)
+data_summary5 <- data_summary5 %>% arrange(tox_name, condition)
+
+plot1 <- ggplot(data_summary1, aes(x = tox_name, y = amount, fill = condition, group=amount)) +
+  geom_bar(stat='identity') +
+  geom_text(aes(label = amount), position = position_stack(vjust = 0.5)) +
+  scale_fill_manual(values = c("#50c878", "#e1e1e1", "#F0BE40"), 
+                    labels = c("active", 'inconclusive', "inactive")) +
+  labs(x = "toxicity assay", y = "number of compounds", fill = "", title=expression(~italic(N)~ '= 7483 compounds')) +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2)) +
+  theme_signature() +
+  theme(axis.title.y = element_text(size=14),
+      axis.title.x = element_text(size=14),
+      legend.text = element_text(size=14))
+
+plot2 <- ggplot(data_summary2, aes(x = tox_name, y = amount, fill = condition, group=amount)) +
+  geom_bar(stat='identity') +
+  geom_text(aes(label = amount), position = position_stack(vjust = 0.5)) +
+  scale_fill_manual(values = c("#50c878", "#e1e1e1", "#F0BE40"), 
+                    labels = c("active", 'inconclusive', "inactive")) +
+  labs(x = "toxicity assay", y = "number of compounds", fill = "", title=expression(~italic(N)~ '= 6735 compounds')) +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2)) +
+  theme_signature() +
+  theme(axis.title.y = element_text(size=14),
+      axis.title.x = element_text(size=14),
+      legend.text = element_text(size=14))
+
+plot3 <- ggplot(data_summary3, aes(x = tox_name, y = amount, fill = condition, group=amount)) +
+  geom_bar(stat='identity') +
+  geom_text(aes(label = amount), position = position_stack(vjust = 0.5)) +
+  scale_fill_manual(values = c("#50c878", "#e1e1e1", "#F0BE40"), 
+                    labels = c("active", 'inconclusive', "inactive")) +
+  labs(x = "toxicity assay", y = "number of compounds", fill = "", title=expression(~italic(N)~ '= 5388 compounds')) +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2)) +
+  theme_signature() +
+  theme(axis.title.y = element_text(size=14),
+      axis.title.x = element_text(size=14),
+      legend.text = element_text(size=14))
+
+plot4 <- ggplot(data_summary4, aes(x = tox_name, y = amount, fill = condition, group=amount)) +
+  geom_bar(stat='identity') +
+  geom_text(aes(label = amount), position = position_stack(vjust = 0.5)) +
+  scale_fill_manual(values = c("#50c878", "#e1e1e1", "#F0BE40"), 
+                    labels = c("active", 'inconclusive', "inactive")) +
+  labs(x = "toxicity assay", y = "number of compounds", fill = "", title=expression(~italic(N)~ '= 1347 compounds')) +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2)) +
+  theme_signature() +
+  theme(axis.title.y = element_text(size=14),
+      axis.title.x = element_text(size=14),
+      legend.text = element_text(size=14))
+
+plot5 <- ggplot(data_summary5, aes(x = tox_name, y = amount, fill = condition, group=amount)) +
+  geom_bar(stat='identity') +
+  geom_text(aes(label = amount), position = position_stack(vjust = 0.5)) +
+  scale_fill_manual(values = c("#50c878", "#e1e1e1", "#F0BE40"), 
+                    labels = c("active", 'inconclusive', "inactive")) +
+  labs(x = "toxicity assay", y = "number of compounds", fill = "", title=expression(~italic(N)~ '= 734 compounds')) +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2)) +
+  theme_signature() +
+  theme(axis.title.y = element_text(size=14),
+      axis.title.x = element_text(size=14),
+      legend.text = element_text(size=14))
+
+
+grid <- plot_grid(plot1, plot3, plot4, plot5, ncol = 2)
+
+# Add a common legend
+legend <- get_legend(plot1 + theme(legend.position = "bottom"))
+
+# Combine the grid and legend
+final_plot <- plot_grid(grid, legend, ncol = 1, align = "h")
+
+# Display the final plot
+final_plot
+ggsave('real_test.png', plot5, dpi=600, width=10, height=5)
+
+
+# Another visualisation for the same data
+colnames(data_summary1)[3] <- 'original dataset'
+colnames(data_summary3)[3] <- 'training_dataset'
+colnames(data_summary4)[3] <- 'test set'
+colnames(data_summary5)[3] <- 'real-life test set'
+summaries_together <- merge(data_summary1, data_summary3, by=c('tox_name', 'condition'))
+summaries_together <- merge(summaries_together, data_summary4, by=c('tox_name', 'condition'))
+summaries_together <- merge(summaries_together, data_summary5, by=c('tox_name', 'condition'))
+
+summaries_together$`original dataset` <- summaries_together$`original dataset`/7483
+summaries_together$`training dataset` <- summaries_together$`training dataset`/5388
+summaries_together$`test set` <- summaries_together$`test set`/1347
+summaries_together$`real-life test set` <- summaries_together$`real-life test set`/734
+original <- summaries_together[, c(1:3)]
+train <- summaries_together[, c(1:2, 4)]
+test <- summaries_together[, c(1:2, 5)]
+real_life <- summaries_together[, c(1:2, 6)]
+
+colnames(original)[3] <- 'prop'
+colnames(train)[3] <- 'prop'
+colnames(test)[3] <- 'prop'
+colnames(real_life)[3] <- 'prop'
+
+original$dataset <- 'original dataset'
+train$dataset <- 'training dataset'
+test$dataset <- 'test set'
+real_life$dataset <- 'real-life test set'
+
+final <- rbind(original, train)
+final <- rbind(final, test)
+final <- rbind(final, real_life)
+```
+
+
+```{r}
+plot_tog <- ggplot(final, aes(x = dataset, y = prop*100, fill = condition, group=dataset)) +
+  geom_bar(stat='identity') +
+  #geom_text(aes(label = amount), position = position_stack(vjust = 0.5)) +
+  scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  scale_fill_manual(values = c("#50c878", "#e1e1e1", "#F0BE40"), 
+                    labels = c("active", 'inconclusive', "inactive")) +
+  labs(x='dataset type', y = "percentage of compounds", fill = "") +
+  scale_x_discrete(limits=c('original dataset', 'training dataset', 'test set', 'real-life test set'), 
+                   labels = function(x) str_wrap(x, width = 10)) +
+  facet_wrap(. ~ tox_name, ncol=4) +
+  theme_signature() +
+  #labs(tag=c(expression(italic(N)[original]* '= 7483 compounds \n'), expression(italic(N)[original]* '= 7483 compounds'))) +
+  coord_cartesian(clip = "off") +
+  theme(plot.tag.position = c(.85, .8)) +
+  theme(axis.title.y = element_text(size=14),
+      axis.title.x = element_text(size=14),
+      legend.text = element_text(size=14),
+      strip.text = element_text(size=14)) 
+
+ggsave('datasets_together.png', plot_tog, dpi=600, width=12, height=6)
+  
+```
+
+
+```{r}
+# Plotting the % of active compounds in train set
+data_summary_act_train <- data_summary3 %>% mutate(prop_act = as.numeric(active_full)/(as.numeric(non_active_full) + as.numeric(active_full)))
+active_rate <- ggplot(data_summary_act_train, aes(x = tox_name, y = prop_act*100)) +
+  geom_col(fill = "#50c878") +
+  scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  labs(x = "toxicity assay", y = "percentage of active compounds", fill = "") +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2)) +
+  theme_signature() +
+  theme(axis.title.y = element_text(size=14),
+      axis.title.x = element_text(size=14),
+      legend.text = element_text(size=14))
+ggsave('active_rate.png', active_rate, dpi=600, width=8, height=4.5)
+  
+```
+
+
+```{r}
+# Visualising original dataset
+#data_after_duplicates_removal <- fread('C:/Users/idarahu/Desktop/Master/final_data.tsv', header=T, sep='\t')
+data_after_duplicates_removal <- fread('C:/Users/idarahu/Desktop/Master/final_data_ready.tsv', header=T, sep='\t')
+correlation_data <- as.data.frame(melt(cor(data_after_duplicates_removal[,2:13], use='pairwise.complete.obs')))
+correlation_data$Var2 <- fct_rev(factor(correlation_data$Var2))
+
+# Drawing heatmap that describes correlation between toxicity assays
+corr_assays <- ggplot(correlation_data, aes(x=Var1, y=Var2, fill=value)) +
+  geom_tile() +
+  scale_fill_gradient2(low='#CB3D74', mid='#FCF8FF', high='#51127C', midpoint=0) +
+  labs(x="", y="", fill="Correlation") +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2)) +
+  theme_signature() +
+  theme(
+      axis.text.x = element_text( size=12),
+      axis.text.y = element_text(size=12),
+      axis.title.y = element_text(size=14),
+      axis.title.x = element_text(size=14),
+      legend.text = element_text(size=12),
+      strip.text = element_text(size=14))
+ggsave('corr_assays.png', corr_assays, dpi=600, width=10, height=6)  
+```
+
+```{r}
+# Visualising missing-labels
+orig_data <- fread('C:/Users/idarahu/Desktop/Master/final_data_ready.tsv', header=T, sep='\t')
+orig_data$not_missing <- rowSums(!is.na(orig_data[,2:13]))
+num_labs <- ggplot(orig_data, aes(x=not_missing)) + 
+  geom_bar(stat='count', color='#51127C', fill='#51127C', alpha=0.7) +
+  scale_x_discrete(limits=1:12)+
+  labs(y='number of compounds', x='number of valid labels') +
+  theme_signature() +
+  theme(
+      axis.text.x = element_text( size=12),
+      axis.text.y = element_text(size=12),
+      axis.title.y = element_text(size=14),
+      axis.title.x = element_text(size=14),
+      legend.text = element_text(size=12),
+      strip.text = element_text(size=14))
+
+ggsave('num_labs.png', num_labs, dpi=600, width=8, height=4) 
+```
+
+
+```{r}
+# Visualising the difference between random-sampling and anticlustering
+filtered_fp09_train_test <- fread('C:/Users/idarahu/Desktop/Master/filtered_train_test_09.tsv', sep='\t', header=T)
+train_rand <- filtered_fp09_train_test %>% dplyr::sample_frac(.8)
+test_rand  <- dplyr::anti_join(filtered_fp09_train_test, train_rand, by = 'SMILES')
+set.seed(123)
+trainIndex <- sample(c(rep(0, 0.8 * nrow(filtered_fp09_train_test)), rep(1, 0.2 * nrow(filtered_fp09_train_test))))
+train_rand<- filtered_fp09_train_test[trial,]
+test_rand <- filtered_fp09_train_test[-trial,]
+
+
+train_filtered_anti <- fread('C:/Users/idarahu/Desktop/Master/train_filtered_09.tsv', header=T)
+test_filtered_anti <- fread('C:/Users/idarahu/Desktop/Master/test_filtered_09.tsv', header=T)
+
+data_summary_train_rand <- data.frame(matrix(nrow=0, ncol=4))
+data_summary_test_rand <- data.frame(matrix(nrow=0, ncol=4))
+data_summary_train_anti <- data.frame(matrix(nrow=0, ncol=4))
+data_summary_test_anti <- data.frame(matrix(nrow=0, ncol=4))
+
+for (i in 2:13) {
+  dat1 <- cbind(tox=tox_names[i-1], t(table(train_rand[, ..i], useNA='always')))
+  data_summary_train_rand <- rbind(data_summary_train_rand, dat1)
+  
+  dat2 <- cbind(tox=tox_names[i-1], t(table(test_rand[, ..i], useNA='always')))
+  data_summary_test_rand <- rbind(data_summary_test_rand, dat2)
+  
+  dat3 <- cbind(tox=tox_names[i-1], t(table(train_filtered_anti [, ..i])))
+  data_summary_train_anti <- rbind(data_summary_train_anti, dat3)
+  
+  dat4 <- cbind(tox=tox_names[i-1], t(table(test_filtered_anti[, ..i])))
+  data_summary_test_anti <- rbind(data_summary_test_anti, dat4)
+} 
+
+colnames(data_summary_train_rand) <- c('tox_name', 'non_active_full', 'active_full', 'missing_full')
+colnames(data_summary_test_rand) <- c('tox_name', 'non_active_full', 'active_full', 'missing_full')
+colnames(data_summary_train_anti) <- c('tox_name', 'non_active_full', 'active_full', 'missing_full')
+colnames(data_summary_test_anti) <- c('tox_name', 'non_active_full', 'active_full', 'missing_full')
+
+data_summary_train_rand$non_active_full <- as.numeric(data_summary_train_rand$non_active_full)/5388
+data_summary_train_rand$active_full <- as.numeric(data_summary_train_rand$active_full)/5388
+data_summary_train_rand$missing_full <- as.numeric(data_summary_train_rand$missing_full)/5388
+
+data_summary_train_anti$non_active_full <- as.numeric(data_summary_train_anti$non_active_full)/5388
+data_summary_train_anti$active_full <- as.numeric(data_summary_train_anti$active_full)/5388
+data_summary_train_anti$missing_full <- as.numeric(data_summary_train_anti$missing_full)/5388
+
+data_summary_test_rand$non_active_full <- as.numeric(data_summary_test_rand$non_active_full)/1347
+data_summary_test_rand$active_full <- as.numeric(data_summary_test_rand$active_full)/1347
+data_summary_test_rand$missing_full <- as.numeric(data_summary_test_rand$missing_full)/1347
+
+data_summary_test_anti$non_active_full <- as.numeric(data_summary_test_anti$non_active_full)/1347
+data_summary_test_anti$active_full <- as.numeric(data_summary_test_anti$active_full)/1347
+data_summary_test_anti$missing_full <- as.numeric(data_summary_test_anti$missing_full)/1347
+
+data_summary_train_rand[,c(2:4)]/5388
+
+original <- summaries_together[, c(1:3)]
+train <- summaries_together[, c(1:2, 4)]
+test <- summaries_together[, c(1:2, 5)]
+real_life <- summaries_together[, c(1:2, 6)]
+
+colnames(original)[3] <- 'prop'
+colnames(train)[3] <- 'prop'
+colnames(test)[3] <- 'prop'
+colnames(real_life)[3] <- 'prop'
+
+original$dataset <- 'original dataset'
+train$dataset <- 'training dataset'
+test$dataset <- 'test set'
+real_life$dataset <- 'real-life test set'
+
+final <- rbind(original, train)
+final <- rbind(final, test)
+final <- rbind(final, real_life)
+
+```
+
+
+```{r}
+# Visualising the mapping of SIRIUS and SMILES fingerprint features
+real_life_test_set_ready <- fread('C:/Users/idarahu/Desktop/Master/real_life_test_set_ready.tsv', sep='\t',header=T)
+fps_for_check <- fread('C:/Users/idarahu/Desktop/Master/validation_set_fps.tsv', sep='\t', header=T)
+
+train09 <- as.data.frame(fread('C:/Users/idarahu/Desktop/Master/train_filtered_09.tsv', header=T, sep='\t'))
+
+real_life_test_set_ready09 <- real_life_test_set_ready %>% select(colnames(train09[, c(1, 14:ncol(train09))]))
+fps_for_check09 <- fps_for_check %>% select(colnames(train09[, c(1, 14:ncol(train09))]))
+fps_for_check09 <- fps_for_check09 %>% filter(SMILES %in% real_life_test_set_ready09$SMILES)
+
+real_life_test_set_ready09 <- as.data.frame(real_life_test_set_ready09[order(SMILES),])
+fps_for_check09 <- as.data.frame(fps_for_check09[order(SMILES),])
+
+check_fps <- data.frame(matrix(ncol=ncol(real_life_test_set_ready09), nrow=nrow(real_life_test_set_ready09)))
+
+for (i in 1:nrow(real_life_test_set_ready09)) {
+  check_fps[i, 1] <- real_life_test_set_ready09[i, 1]
+  for (j in 2:ncol(real_life_test_set_ready09)) {
+    check_fps[i, j] <- real_life_test_set_ready09[i, j] - fps_for_check09[i, j]
+  }
+}
+
+#colnames(check_fps) <- colnames(real_life_test_set_ready09)
+check_fps <- check_fps[order(-rowSums(check_fps[,c(2:ncol(check_fps))] > 0.5), rowSums(check_fps[,c(2:ncol(check_fps))] < -0.5)),]
+melted_check_fps <- melt(check_fps)
+#compounds_order <- as.data.frame(rowSums(abs(check_fps2[,c(2:ncol(check_fps2))])))
+#check_fps$wrong <- rowSums(abs(check_fps2[,c(2:ncol(check_fps2))]))
+#check_fps <- check_fps[order(check_fps$wrong),]
+
+plot_fps <- ggplot(melted_check_fps, aes(x=variable, y=SMILES, fill=value)) + 
+  geom_tile() +
+  scale_fill_gradient2(low = '#4b2991', high = '#ea4f88', mid = '#e1e1e1', 
+   midpoint = 0, limit = c(-1,1), space='Lab', 
+    name='') +
+  labs(x='fingerprint features', y='compounds') +
+  scale_y_discrete(limits=check_fps$SMILES) +
+  scale_x_discrete(limits=number_of_wrong_features$VALUE) +
+  theme_signature() +
+  theme(axis.ticks.x = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        legend.position = 'bottom',
+        axis.title.y = element_text(size=14),
+      axis.title.x = element_text(size=14),
+      #legend.text = element_text(size=14),
+      strip.text = element_text(size=14),
+      legend.key.width = unit(2.5, "cm"))
+
+ggsave('fps_comparison.png', plot_fps, dpi=600, width=6, height=6)
+```
+
+```{r}
+# Visualising the percentages of incorrect features by using threshold
+check_fps2 <- data.frame(matrix(ncol=ncol(real_life_test_set_ready09), nrow=nrow(real_life_test_set_ready09)))
+for (i in 1:nrow(real_life_test_set_ready09)) {
+  check_fps2[i, 1] <- real_life_test_set_ready09[i, 1]
+  for (j in 2:ncol(real_life_test_set_ready09)) {
+    check_fps2[i, j] <- ifelse(real_life_test_set_ready09[i, j] > 0.5, 1, 0) - fps_for_check09[i, j]
+  }
+}
+
+colnames(check_fps2) <- colnames(real_life_test_set_ready09)
+number_of_wrong_features <- as.data.frame(colSums(abs(check_fps2[,c(2:ncol(check_fps2))])))
+number_of_wrong_features <- tibble::rownames_to_column(number_of_wrong_features, "VALUE")
+number_of_wrong_features$prop <- number_of_wrong_features[,2]/734*100
+number_of_wrong_features <- number_of_wrong_features[order(-number_of_wrong_features$prop),]
+number_of_wrong_features$number <-1:nrow(number_of_wrong_features)
+
+plot_wrong_predictions <- ggplot(number_of_wrong_features, aes(x=number, y=prop)) + 
+  geom_bar(stat='identity') +
+  labs(x='fingerprint features', y='percentage of incorrect predictions') +
+  scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme_signature() +
+  theme(axis.title.y = element_text(size=14),
+      axis.title.x = element_text(size=14),
+      strip.text = element_text(size=14))
+
+ggsave('fps_wrong.png', plot_wrong_predictions, dpi=600, width=6, height=6)
+```
+
+
+```{r}
+ggplot(number_of_wrong_features, aes(x=number, y=prop)) + 
+  geom_bar(stat='identity') +
+  labs(x='fingerprint features', y='percentage of incorrect predictions') +
+  scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  theme_signature() +
+  theme(axis.title.y = element_text(size=14),
+      axis.title.x = element_text(size=14),
+      strip.text = element_text(size=14))
+```
+
+```{r}
+# ROCAUC plot
+rocauc <- ggplot(test, aes(d = D, m = M1)) + geom_roc(n.cuts = 0) +
+  labs(x='FPR', y='TPR') +
+  #annotate("text", x = .5, y = .4, 
+  #         label = paste("ROC-AUC =", round(calc_auc(basicplot)$AUC, 2))) +
+  geom_point(aes(x=0.42, y=0.9), color='#ea4f88', size=5, alpha=0.5)+
+  #annotate('text')
+  theme_signature()
+ggsave('rocauc.png', rocauc , dpi=600, width=6, height=6)
+```
+```{r}
+# Real-life visuals
+data_sim <- read.table('11.tsv', sep='\t', header=T)
+data_sim_t <- as.data.frame(transpose(data_sim))
+data_sim_t$number <-1:nrow(data_sim_t)
+
+melted_data_sim <- melt(data_sim_t[c(500:529, 11,18,19,21,22,25,29,35,51,79,80, 81,193,210,263,264,311,659,651),], id.vars='number')
+melted_data_sim <- melted_data_sim %>% mutate(x_ax = as.numeric(gsub('V', '', variable)))
+#melted_data_sim <- melted_data_sim %>% mutate(color = ifelse(number %in% c(449, 28, 32), 'H', 'G'))
+melted_data_sim1 <- melt(data_sim_t[c(28, 543, 180),], id.vars='number')
+melted_data_sim1 <- melted_data_sim1 %>% mutate(x_ax = as.numeric(gsub('V', '', variable)))
+
+sim_plot <- ggplot() + 
+  geom_line(data=melted_data_sim, aes(x=x_ax, y=value, group=number), color='#e1e1e1', linewidth=1) +
+  geom_line(data=melted_data_sim1, aes(x=x_ax, y=value, group=number), color='#ea4f88', linewidth=1) +
+  #scale_color_manual(values=c('#e1e1e1','#ea4f88')) +
+  labs(x='number of samplings', y='averaged predicted probability') +
+  scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x)) +
+              #labels = trans_format("log10", math_format(10^.x))) +
+  theme_signature()+
+  theme(axis.title.y = element_text(size=14),
+      axis.title.x = element_text(size=14),
+      strip.text = element_text(size=14))
+ggsave('nr_sr_p53_sim.png', sim_plot , dpi=600, width=8, height=6)
+```
+
+```{r}
+# Models comparison
+
+all_models <- read.table('all_models_evaluated.tsv', sep='\t', header=T)
+all_models_filtered <- all_models %>% filter(FPR_09<1)
+
+ggplot(all_models_filtered, aes(x=assay, y=FPR_09, color=as.character(best))) + 
+  geom_jitter(shape=16, position=position_jitter(0.2)) +
+  theme_signature()
+```
+```{r}
+all_models <- read.table('copy.tsv', sep='\t', header=T)
+all_models_filtered <- all_models %>% filter(FPR_09<1)
+
+fpr_models <- ggplot(all_models_filtered, aes(x=assay, y=FPR_09, color=as.character(best), alpha=as.character(best))) + 
+  geom_jitter(shape=16, position=position_jitter(0.2), size=3) +
+  scale_color_manual(values=c("#e1e1e1", '#F0BE40', "#50c878")) +
+  scale_alpha_manual(values=c(0.5, 1,1)) +
+  labs(y = 'FPR at 90% of recall') +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2)) +
+  theme_signature() +
+  theme(axis.title.y = element_text(size=14),
+      axis.title.x = element_text(size=14),
+      legend.text = element_text(size=14))
+
+ggsave('fpr_models.png', fpr_models , dpi=600, width=8, height=4)
+```
+
+
+```{r}
+bal_acc <- ggplot(all_models_filtered, aes(x=assay, y=balanced_accuracy, color=as.character(best), alpha=as.character(best))) + 
+  geom_jitter(shape=16, position=position_jitter(0.2), size=3) +
+  scale_color_manual(values=c("#e1e1e1", '#F0BE40', "#50c878")) +
+  scale_alpha_manual(values=c(0.5, 1,1)) +
+  labs(y = 'balanced accuracy') +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2)) +
+  theme_signature() +
+  theme(axis.title.y = element_text(size=14),
+      axis.title.x = element_text(size=14),
+      legend.text = element_text(size=14))
+
+ggsave('bal_acc_models.png', bal_acc , dpi=600, width=8, height=4)
+```
+
+```{r}
+rocauc_p <- ggplot(all_models_filtered, aes(x=assay, y=ROCAUC, color=as.character(best), alpha=as.character(best))) + 
+  geom_jitter(shape=16, position=position_jitter(0.2), size=3) +
+  scale_color_manual(values=c("#e1e1e1", '#F0BE40', "#50c878")) +
+  scale_alpha_manual(values=c(0.5, 1,1)) +
+  labs(y = 'AUC-ROC') +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2)) +
+  theme_signature() +
+  theme(axis.title.y = element_text(size=14),
+      axis.title.x = element_text(size=14),
+      legend.text = element_text(size=14))
+ggsave('AUCROC_models.png', rocauc_p , dpi=600, width=8, height=4)
+```
+
+
+```{r}
+naive_sample <- fread('naive_vs_sample.csv', sep=',', header=T)
+
+changed_plot <- ggplot(naive_sample, aes(x = assay, y = prop*100, group=model, fill=model)) +
+  geom_col(position = 'dodge') +
+  scale_fill_gradient2(low = '#F0BE40', high = '#50c878', mid = '#e1e1e1', 
+   midpoint = 1.5, limit = c(1,2), space='Lab', 
+    name='') +
+  scale_y_continuous(labels = dollar_format(suffix = "%", prefix = "")) +
+  labs(x = "toxicity assay", y = str_wrap("percentage of the compounds that changed the activity", width = 30), fill = "") +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2)) +
+  theme_signature() +
+  theme(axis.title.y = element_text(size=14),
+      axis.title.x = element_text(size=14),
+      legend.text = element_text(size=14))
+ggsave('changed_act.png', changed_plot, dpi=600, width=8, height=4.5)
+```
+

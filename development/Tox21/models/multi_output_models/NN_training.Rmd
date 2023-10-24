@@ -1,0 +1,253 @@
+---
+title: "NN training"
+author: "Ida"
+date: "2023-01-16"
+output: html_document
+---
+Code for training and testing the multi-output models.
+```{r}
+library(keras)
+library(caret)
+library(data.table)
+library(dplyr)
+library(anticlust)
+library(tensorflow)
+library(optparse)
+library(ROCit)
+library(ROCR)
+```
+
+```{r}
+data <- fread('./train_filtered_09.tsv', sep='\t', header=T)
+
+set.seed(123)
+equal_train_10 <- anticlustering(data[, 2:13], K=10, objective="diversity", standardize=F)
+data$folds <- equal_train_10
+
+write.table(data, 'data_with_folds.tsv', col.names=T, row.names=F, quote=F)
+```
+
+```{r}
+data <- fread('data_with_folds.tsv', sep=' ', header=T)
+```
+
+```{r}
+# Defining the hyperparameters
+
+input_size = length(data[,14:(ncol(data)-1)])
+
+option_list <- list( 
+  make_option('--l2_coef', default=0.000001, type='numeric',
+              help='L2 regularization'),
+  make_option('--lr', default=0.05, type='numeric',
+              help='learning rate'),
+  make_option('--lr_annealing', default=0.1, type='numeric',
+              help='learning rate annealing'),
+  make_option('--units1', default=4096, type='numeric',
+              help='number of units in the first layer'),
+  make_option('--units2', default=2048, type='numeric',
+              help='number of units in the second layer'),
+  make_option('--units3', default=1024, type='numeric',
+              help='number of units in the third layer'),
+  make_option('--units4', default=512, type='numeric',
+              help='number of units in the third layer'),
+  make_option('--dropout1', default=0.5, type='numeric',
+              help='dropout after first layer'),
+  make_option('--dropout2', default=0.5, type='numeric',
+              help='dropout after second layer'),
+  make_option('--dropout3', default=0.5, type='numeric',
+              help='dropout after third layer'),
+  make_option('--dropout4', default=0.5, type='numeric',
+              help='dropout after fourth layer'))
+
+option_parser <- OptionParser(option_list=option_list)
+options <- parse_args(option_parser)
+
+```
+
+```{r}
+# Defining a loss function so that missing labels would be discarded
+weighted_masked_loss <- function(y_true, y_pred) {
+  K <- keras::backend()
+  mask <- K$cast(K$not_equal(y_true, -1), K$floatx())
+  weights <- K$cast(K$equal(y_true, 1), K$floatx()) * 50 + 1
+  return (K$binary_crossentropy(y_true * mask, y_pred * mask) * weights)
+}
+```
+
+
+```{r}
+# Defining a ROC-AUC so that missing labels would be discarded
+AUC <- tf$metrics$AUC(curve = 'ROC')
+masked_auc <- custom_metric('masked_AUC', function(y_true, y_pred) {
+  K <- keras::backend()
+  mask = K$cast(K$not_equal(y_true, -1), K$floatx())
+  AUC$update_state(y_true * mask, y_pred * mask)
+  auc_masked <- AUC$result()
+  return(auc_masked * K$sum(mask) / K$sum(K$ones_like(y_true)))
+})
+```
+
+```{r}
+# Defining the model architecture
+create_model <- function() {
+  model <- keras_model_sequential() %>%
+  layer_dense(units=options$units1, activation='relu', input_shape=input_size,
+              kernel_regularizer=regularizer_l2(options$l2_coef)) %>%
+  layer_dropout(options$dropout1) %>%
+  layer_batch_normalization() %>%
+  layer_dense(units=options$units2, activation='relu',
+              kernel_regularizer=regularizer_l2(options$l2_coef)) %>%
+  layer_dropout(options$dropout2) %>%
+  layer_batch_normalization() %>%
+  layer_dense(units=options$units3, activation='relu',
+              kernel_regularizer=regularizer_l2(options$l2_coef)) %>%
+  layer_dropout(options$dropout3) %>%
+  layer_batch_normalization() %>%
+  layer_dense(units=options$units4, activation='relu',
+              kernel_regularizer=regularizer_l2(options$l2_coef)) %>%
+  layer_dropout(options$dropout4) %>%
+  layer_batch_normalization() %>%
+  layer_dense(units=12, activation='sigmoid',
+              kernel_regularizer=regularizer_l2(options$l2_coef)) %>% 
+     compile(
+       optimizer=optimizer_adam(learning_rate=options$lr),
+       loss=weighted_masked_loss,
+       metrics=list(masked_auc)
+    )
+  return(model)
+}
+```
+
+
+```{r}
+models_list <- list()
+history_list <- list()
+validation_scores <- list()
+
+
+for (fold in unique(data$folds)) {
+   ind <- which(data$folds == fold)
+   training_data <- data[-ind,] %>% select(-folds)
+   x_train <- as.matrix(training_data[, 14:ncol(training_data)])
+   y_train <- training_data[, 2:13]
+   y_train[y_train > 1] <- -1
+   y_train <- data.matrix(y_train)
+  
+   validation_data <- data[ind,] %>% select(-folds)
+   x_validation <- as.matrix(validation_data[, 14:ncol(validation_data)])
+   y_validation <- validation_data[, 2:13]
+   y_validation[y_validation > 1] <- -1
+   y_validation <- data.matrix(y_validation)
+   
+   model <- NaN
+   model <- create_model()
+   
+   history <- model %>%
+     fit(
+       x=x_train,
+       y=y_train,
+       batch_size=32,
+       epochs=100,
+       validation_data=list(x_validation, y_validation),
+       callbacks=list(callback_reduce_lr_on_plateau(monitor='val_masked_AUC',
+                                                    mode='max',
+                                                    factor=options$lr_annealing,
+                                                    patience=10),
+                      callback_early_stopping(monitor='val_masked_AUC',
+                                              patience=20))
+  )
+  
+  models_list[[fold]] <- model
+  history_list[[fold]] <- history
+  validation_scores[[fold]] <- max(history$metrics$val_masked_AUC)
+        
+}
+
+
+average_validation_score <- mean(unlist(validation_scores))
+print(average_validation_score)
+```
+
+```{r}
+# Training the best model again (selecting the model based on the data obtained from cross-validation)
+x_train <- as.matrix(data[, 14:(ncol(data)-1)])
+y_train <- data[, 2:13]
+y_train[y_train > 1] <- -1
+y_train <- data.matrix(y_train)
+model <- create_model()
+history <- model %>%
+     fit(
+       x=x_train,
+       y=y_train,
+       batch_size=32,
+       epochs=30)
+
+```
+
+
+Evaluating the model on intermediate test set.
+```{r}
+test_data <- fread('./test_filtered_09.tsv', sep='\t', header=T)
+
+x_test <- as.matrix(test_data[, 14:(ncol(test_data))])
+y_test <- test_data[, 2:13]
+y_test[y_test > 1] <- -1
+y_test <- data.matrix(y_test)
+
+```
+
+```{r}
+model %>% evaluate(x_test, y_test, batch_size = 512)
+```
+
+
+```{r}
+predicted_test_data <- model %>% predict(x_test)
+```
+
+
+```{r}
+statistics_df <- data.frame(matrix(ncol = 6, nrow = 12))
+colnames(statistics_df) <- c('assay', 'balanced_accuracy', 'ROCAUC', 'FPR_09', 'balanced_accuracy_09', 'cutoff_09')
+for (i in c(1:12)) {
+  statistics_df$assay[i] <- colnames(y_test)[i]
+  assay_dat <- rowMeans(results[, seq(i,12000, 12)]) 
+  
+  #data_tog <- cbind(y_test[,i], predicted_test_data[,i])
+  #data_tog <- cbind(data_tog, ifelse(predicted_test_data[,i] >= 0.5, 1, 0))
+  data_tog <- cbind(y_test[,i], assay_dat)
+  data_tog <- cbind(data_tog, ifelse(assay_dat >= 0.5, 1, 0))
+  data_tog <- cbind(data_tog, preds_nav[,i])
+  data_eval <- data_tog[data_tog[,1] > -1, ]
+  
+  print(sum(data_eval[,3] != data_eval[,4]))
+  pred <- ROCR::prediction(data_eval[,2], data_eval[,1])
+  
+  
+  conf_mat <- confusionMatrix(relevel(as.factor(data_eval[,3]), ref='1'), 
+                              relevel(as.factor(data_eval[,1]), ref='1'), 
+                              mode='everything')
+  statistics_df$balanced_accuracy[i] <- conf_mat$byClass['Balanced Accuracy']
+  
+  roc_emp <- rocit(data_eval[,2], data_eval[,1])
+  threshold1 <- 0.9
+  cutoff1 <- roc_emp$Cutoff[min(which(roc_emp$TPR >= threshold1))]
+  FPR1 <- roc_emp$FPR[min(which(roc_emp$TPR >= threshold1))]
+  pred_labels1 <- ifelse(data_eval[,2] >= cutoff1, 1, 0)
+  conf_mat1 <- confusionMatrix(relevel(as.factor(pred_labels1), ref='1'), 
+                               relevel(as.factor(data_eval[,1]), ref='1'), 
+                               mode='everything')
+  statistics_df$cutoff_09[i] <- cutoff1
+  statistics_df$FPR_09[i] <- FPR1
+  statistics_df$ROCAUC[i] <- ROCR::performance(pred, 'auc')@y.values[[1]]
+  statistics_df$balanced_accuracy_09[i] <- conf_mat1$byClass['Balanced Accuracy']
+
+}
+```
+
+
+```{r}
+write.table(statistics_df, '4_layers_4096_2048_1024_512.tsv', col.names=T, row.names=F, quote=F, sep='\t')
+```
+
