@@ -1,5 +1,6 @@
 ---
 title: "Mass spectrometric data preprocessing I"
+author: "Ida Rahu"
 output: html_notebook
 ---
 ```{r}
@@ -37,15 +38,15 @@ for(i in 2:length(list_dirs_massbank)) {
   }
 }  
 
-#write.table(mass_data, 'mass_data_info.tsv', row.names=F, col.names=T, sep='\t', quote=F)
+#write.table(mass_data, './data/mass_data_info.tsv', row.names=F, col.names=T, sep='\t', quote=F)
 
 # Filtering out some of the files based on the instrument type - not suitable for the final application (not high-resolution mass spectra)
 mass_data_filtered <- mass_data[grep('ESI', mass_data$instrument_type), ]
 mass_data_filtered <- mass_data_filtered[-grep('QQ', mass_data_filtered$instrument_type), ]
 
-#write.table(mass_data_filtered, 'mass_data_info_filtered.tsv', row.names=F, col.names=T, sep='\t', quote=F)
+#write.table(mass_data_filtered, './data/mass_data_info_filtered.tsv', row.names=F, col.names=T, sep='\t', quote=F)
 
 mass_data_filtered <- mass_data_filtered %>% filter(instrument_type != 'LC-ESI-Q')
-#write.table(mass_data_filtered, 'mass_data_to_standardisation.tsv', row.names=F, col.names=T, sep='\t', quote=F)
+#write.table(mass_data_filtered, './data/mass_data_to_standardisation.tsv', row.names=F, col.names=T, sep='\t', quote=F)
 ```
 
