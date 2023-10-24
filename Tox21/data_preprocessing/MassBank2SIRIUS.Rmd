@@ -1,6 +1,6 @@
 ---
 title: "Massbank2SIRIUS"
-author: "Ida"
+author: "Ida Rahu"
 date: "2023-01-10"
 output: html_document
 ---
@@ -18,7 +18,7 @@ library(enviPat)
 
 Reading in the real-life test set (generated in `Split_data_real_life_test_set.ipynb`) and adding the needed information about the experimental conditions used while measuring the MS2 spectra.
 ```{r}
-validation_set <- as.data.frame(fread('validation_set_final.tsv', sep='\t', header=T))
+validation_set <- as.data.frame(fread('./data/validation_set_final.tsv', sep='\t', header=T))
 
 full_name_creator <- function(file_name) {
   return(paste0('./MassBank-data-2022.06a/', strsplit(file_name, '-')[[1]][2], '/', file_name))
@@ -98,17 +98,17 @@ val5 <- validation_set %>% filter(precursor_type == '[M]+' & !SMILES %in% SMILES
 val <- rbind(val, val5)
 SMILES5 <- unique(val$SMILES)
 validation_set_final_groups <- val
-write.table(validation_set_final_groups, 'validation_set_with_groupIDs.tsv', sep='\t', col.names=F, row.names=F, quote=F)
+write.table(validation_set_final_groups, './data/validation_set_with_groupIDs.tsv', sep='\t', col.names=F, row.names=F, quote=F)
 
 validation_set_fg_orbitrap <- validation_set_final_groups %>% filter(instrument_SIRIUS == 'orbitrap')
 SMILES_orbitrap <- unique(validation_set_fg_orbitrap$SMILES)
 unique_names_orbitrap <- unique(validation_set_fg_orbitrap$unique_name)
-write.table(validation_set_fg_orbitrap, 'validation_set_orbitrap.tsv', sep='\t', col.names=F, row.names=F, quote=F)
+write.table(validation_set_fg_orbitrap, './data/validation_set_orbitrap.tsv', sep='\t', col.names=F, row.names=F, quote=F)
 
 validation_set_fg_qtof <- validation_set_final_groups %>% filter(instrument_SIRIUS == 'qtof' & !SMILES %in% SMILES_orbitrap)
 SMILES_qtof <- unique(validation_set_fg_qtof$SMILES)
 unique_names_qtof <- unique(validation_set_fg_qtof$unique_name)
-write.table(validation_set_fg_qtof, 'validation_set_qtof.tsv', sep='\t', col.names=F, row.names=F, quote=F)
+write.table(validation_set_fg_qtof, './data/validation_set_qtof.tsv', sep='\t', col.names=F, row.names=F, quote=F)
 
 problematic <- validation_set_final_groups %>% filter(!unique_name %in% unique_names_orbitrap & !unique_name %in% unique_names_qtof)
 
@@ -323,7 +323,7 @@ output_folder <- './SIRIUS_output'
 
 Checking which compounds do not have calculated fingerprint features
 ```{r}
-validation_set_SIRIUS <- fread('validation_set_SIRIUS.tsv', sep='\t', header=F)
+validation_set_SIRIUS <- fread('./data/validation_set_SIRIUS.tsv', sep='\t', header=F)
 validation_set_SIRIUS_compounds <- (validation_set_SIRIUS %>% group_by(V23))[,c(1:13, 21, 23)]
 validation_set_SIRIUS_compounds <- validation_set_SIRIUS_compounds[!duplicated(validation_set_SIRIUS_compounds), ]
 colnames(validation_set_SIRIUS_compounds) <- c('SMILES', 'nr.ahr', 'nr.ar.lbd', 'nr.ar', 'nr.aromatase','nr.er.lbd', 'nr.er', 'nr.ppar.gamma', 'sr.are', 'sr.atad5', 'sr.hse', 'sr.mmp', 'sr.p53', 'ionization', 'validation_ID')
@@ -396,11 +396,11 @@ colnames(calculated_validation_fps_SIRIUS_T) <- rownames(calculated_validation_f
 calculated_validation_fps_SIRIUS_T$validation_ID <- colnames(calculated_validation_fps_SIRIUS)
 
 real_life_test_set_ready <- merge(validation_set_SIRIUS_compounds, calculated_validation_fps_SIRIUS_T, by='validation_ID')
-#write.table(real_life_test_set_ready, 'real_life_test_set_ready.tsv', sep='\t', col.names=T, row.names=F, quote=F)
-real_life_test_set_ready <- fread('real_life_test_set_ready.tsv', sep='\t',header=T)
-fps_for_check <- fread('validation_set_fps.tsv', sep='\t', header=T)
+#write.table(real_life_test_set_ready, './data/real_life_test_set_ready.tsv', sep='\t', col.names=T, row.names=F, quote=F)
+real_life_test_set_ready <- fread('./data/real_life_test_set_ready.tsv', sep='\t',header=T)
+fps_for_check <- fread('./data/validation_set_fps.tsv', sep='\t', header=T)
 
-train09 <- as.data.frame(fread('train_filtered_09.tsv', header=T, sep='\t'))
+train09 <- as.data.frame(fread('./data/train_filtered_09.tsv', header=T, sep='\t'))
 
 real_life_test_set_ready09 <- real_life_test_set_ready %>% select(colnames(train09[, c(1, 14:ncol(train09))]))
 fps_for_check09 <- fps_for_check %>% select(colnames(train09[, c(1, 14:ncol(train09))]))
