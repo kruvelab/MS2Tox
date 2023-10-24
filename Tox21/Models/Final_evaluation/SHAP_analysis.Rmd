@@ -1,0 +1,194 @@
+---
+title: "SHAP_analysis"
+author: "Ida Rahu"
+date: "2023-04-16"
+output: html_document
+---
+
+```{r}
+library(data.table)
+library(dplyr)
+library(shapr)
+library(gbm)
+library(tidyverse)
+library(xgboost)
+library(caret)
+```
+
+
+```{r}
+# Note: The functions shap.score.rank, shap_long_hd
+# originally published at https://liuyanguu.github.io/post/2018/10/14/shap-visualization-for-xgboost/
+# All the credits to the author.
+
+shap.score.rank <- function(xgb_model = xgb_mod, shap_approx = TRUE, 
+                            X_train = mydata$train_mm){
+  require(xgboost)
+  require(data.table)
+  shap_contrib <- predict(xgb_model, X_train,
+                          predcontrib = TRUE, approxcontrib = shap_approx)
+  shap_contrib <- as.data.table(shap_contrib)
+  shap_contrib[,BIAS:=NULL]
+  cat('make SHAP score by decreasing order\n\n')
+  mean_shap_score <- colMeans(abs(shap_contrib))[order(colMeans(abs(shap_contrib)), decreasing = T)]
+  return(list(shap_score = shap_contrib,
+              mean_shap_score = (mean_shap_score)))
+}
+
+# a function to standardize feature values into same range
+std1 <- function(x){
+  return ((x - min(x, na.rm = T))/(max(x, na.rm = T) - min(x, na.rm = T)))
+}
+
+
+# prep shap data
+shap.prep <- function(shap  = shap_result, X_train = mydata$train_mm, top_n){
+  require(ggforce)
+  # descending order
+  if (missing(top_n)) top_n <- dim(X_train)[2] # by default, use all features
+  if (!top_n%in%c(1:dim(X_train)[2])) stop('supply correct top_n')
+  require(data.table)
+  shap_score_sub <- as.data.table(shap$shap_score)
+  shap_score_sub <- shap_score_sub[, names(shap$mean_shap_score)[1:top_n], with = F]
+  shap_score_long <- melt.data.table(shap_score_sub, measure.vars = colnames(shap_score_sub))
+  
+  # feature values: the values in the original dataset
+  fv_sub <- as.data.table(X_train)[, names(shap$mean_shap_score)[1:top_n], with = F]
+  # standardize feature values
+  fv_sub_long <- melt.data.table(fv_sub, measure.vars = colnames(fv_sub))
+  fv_sub_long[, stdfvalue := std1(value), by = "variable"]
+  # SHAP value: value
+  # raw feature value: rfvalue; 
+  # standarized: stdfvalue
+  names(fv_sub_long) <- c("variable", "rfvalue", "stdfvalue" )
+  shap_long2 <- cbind(shap_score_long, fv_sub_long[,c('rfvalue','stdfvalue')])
+  shap_long2[, mean_value := mean(abs(value)), by = variable]
+  setkey(shap_long2, variable)
+  return(shap_long2) 
+}
+
+var_importance <- function(shap_result, top_n=10)
+{
+  var_importance=tibble(var=names(shap_result$mean_shap_score), importance=shap_result$mean_shap_score)
+  
+  var_importance=var_importance[1:top_n,]
+  
+  ggplot(var_importance, aes(x=reorder(var,importance), y=importance)) + 
+    geom_bar(stat = "identity") + 
+    coord_flip() + 
+    theme_light() + 
+    theme(axis.title.y=element_blank()) 
+}
+```
+
+
+```{r}
+model_nr_ahr <- readRDS('down_xgbTree_nr.ahr_0.7.rda')
+```
+
+
+```{r}
+varImp(model_nr_ahr, n=10)
+```
+
+```{r}
+data <- fread('C:/Users/idarahu/Desktop/Master/data_for_models/data_07/train/nr.ahr.tsv', sep='\t', header=T)
+data <- as.data.frame(data)[data[, 1] != 99999, ]
+data[, 1] <- relevel(as.factor(as.factor(data[, 1]) %>% make.names()), ref='X1')
+colnames(data)[1] <- 'Class'
+
+
+set.seed(9560)
+down_train <- downSample(x=data[, -1], y=data$Class)
+
+test_data <- fread('C:/Users/idarahu/Desktop/Master/data_for_models/data_07/test/test_nr.ahr.tsv', sep='\t', header=T)
+test_data  <- as.data.frame(test_data)[test_data[, 1] != 99999, ]
+test_data[, 1] <- relevel(as.factor(as.factor(test_data[, 1]) %>% make.names()), ref='X1')
+colnames(test_data)[1] <- 'tox_class'
+
+```
+
+```{r}
+shap_result_ahr = shap.score.rank(xgb_model = model_nr_ahr$finalModel, 
+                              X_train = as.matrix((data[,-1])),
+                              shap_approx = F
+                              )
+```
+
+```{r}
+var_importance(shap_result_ahr, top_n=10)
+```
+
+```{r}
+shap_long_ahr = shap.prep(shap = shap_result_ahr,
+                           X_train = as.matrix((data[,-1])),
+                           top_n = 10
+                           )
+
+xgb.plot.shap(data = as.matrix((data[,-1])), # input data
+              model = model_nr_ahr$finalModel, # xgboost model
+              features = names(shap_result_ahr$mean_shap_score[1:10]), # only top 10 var
+              n_col = 3, # layout option
+              plot_loess = T # add red line to plot
+              )
+
+```
+
+```{r}
+theme_signature <- function() {
+  theme_minimal(base_size = 12, base_family = "sans") +
+    theme(
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      axis.line = element_line(size = .13, color = '#343434'),
+      axis.text = element_text(color = "#343434"),
+      axis.ticks.x = element_line(size = 0.5, color = '#343434'),
+      axis.ticks.y = element_line(size = 0.5, color = '#343434'),
+      axis.title = element_text(color = "#343434"),
+      axis.title.y = element_text(hjust = 1, margin = margin(0, 6, 0, 15, "pt")),
+      axis.title.x = element_text(hjust = 0, margin = margin(6, 0, 15, 0, "pt")),
+      plot.subtitle = element_text(color = "black", size= 11),
+      plot.title = element_text(color = "black", size= 20), 
+      plot.caption = element_text(hjust = 0, color = "black"),
+      plot.margin = margin(.5,.5,.5,.5,"cm"),
+      plot.background = element_rect(fill = "white", color = 'white'),
+      legend.text = element_text(color = "#343434"),
+      legend.title = element_text(color = "#343434"),
+      strip.text = element_text(color = "black")) 
+}
+```
+
+
+```{r}
+plot.shap.summary <- function(data_long){
+  x_bound <- max(abs(data_long$value))
+  require('ggforce')
+  plot1 <- ggplot(data = data_long)+
+    coord_flip() + 
+    geom_sina(aes(x = variable, y = value, color = stdfvalue)) +
+    geom_text(data = unique(data_long[, c("variable", "mean_value"), with = F]),
+              aes(x = variable, y=-Inf, label = sprintf("%.3f", mean_value)),
+              size = 3, alpha = 0.7,
+              hjust = -0.2, 
+              fontface = "bold") + # bold
+    scale_color_gradient(low='#F0BE40', high='#00BF63', 
+                         breaks=c(0,1), labels=c("structural pattern missing","structural pattern present")) +
+    theme_bw() + 
+
+    theme_signature() +
+    theme(axis.line.y = element_blank(), axis.ticks.y = element_blank(), 
+          legend.position="bottom") + 
+    geom_hline(yintercept = 0) + 
+    scale_y_continuous(limits = c(-x_bound, x_bound)) +
+    scale_x_discrete(limits = rev(levels(data_long$variable)) 
+    ) + 
+    labs(y = "SHAP value (impact on model output)", x = "", color = "") 
+  return(plot1)
+}
+```
+
+
+```{r}
+ggsave('nr_ahr_SHAP.png', plot.shap.summary(data_long = shap_long_ahr), dpi=600, width=8, height=6)
+```
+
