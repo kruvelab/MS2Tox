@@ -1,2 +1,10 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^\.github$
+^ModelsData$
+^Old versions$
+^Codes$
+\.Rhistory$
+^\.RData$
+^ExampleData\.zip$
+^development$
