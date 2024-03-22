@@ -102,4 +102,4 @@ Code example for calculating LC50 values:
     results  <- FishLC50Prediction(folderwithSIRIUSfiles, chosen_mode)
     
     
-Addition to SIRIUS fingerprints it is also possible to calculate LC50 values using SMILES as an input. For that use function *SMILESFingerprints(compoundslistwithSMILES)*. PS! Input needs to be a table containing columns named "SMILES" and "exactMass". Use exactly this format for naming. 
+Addition to SIRIUS fingerprints it is also possible to calculate LC50 values using SMILES as an input. For that use function *LC50fromSMILES(compoundslistwithSMILES)*. PS! Input needs to be a table containing columns named "SMILES" and "exactMass". Use exactly this format for naming. 
