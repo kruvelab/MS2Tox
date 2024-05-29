@@ -68,8 +68,9 @@ FpTableForPredictions <- function(folderwithSIRIUSfiles){
   subfolder <- dir(folderwithSIRIUSfiles, all.files = TRUE, recursive = TRUE, pattern = ".fpt")
   subfolder_score <- dir(folderwithSIRIUSfiles, all.files = TRUE, recursive = TRUE, pattern = ".info")
 
-  fp_names_pos <- paste("Un", read_delim(paste(folderwithSIRIUSfiles,"/csi_fingerid.tsv", sep = ""), delim = "\t")$absoluteIndex, sep = "")
-  fp_names_neg <- paste("Un", read_delim(paste(folderwithSIRIUSfiles,"/csi_fingerid_neg.tsv", sep = "" ), delim = "\t")$absoluteIndex, sep = "")
+  # changed from readr::read_delim to utils::read.delim due to verbose output
+  fp_names_pos <- paste("Un", read.delim(paste(folderwithSIRIUSfiles,"/csi_fingerid.tsv", sep = ""), sep = "\t")$absoluteIndex, sep = "")
+  fp_names_neg <- paste("Un", read.delim(paste(folderwithSIRIUSfiles,"/csi_fingerid_neg.tsv", sep = "" ), sep = "\t")$absoluteIndex, sep = "")
   fp_names_common <- as.data.frame(fp_names_pos)  %>%
     mutate(fp_names_neg = fp_names_pos) %>%
     inner_join(as.data.frame(fp_names_neg))
@@ -110,17 +111,15 @@ FingerPrintTable <- function(subfolder, fp_names_pos, fp_names_neg, fp_names_com
     }
   }
 
-  fp_pos <- FingerPrintTablePOS(subfolder_pos, folderwithSIRIUSfiles)
-
-  if(nrow(fp_pos) != 0){
+  if(!is.null(subfolder_pos)){
+    fp_pos <- FingerPrintTablePOS(subfolder_pos, folderwithSIRIUSfiles)
     colnames(fp_pos) <- c(fp_names_pos, "predion", "id", "foldernumber", "predform")
-  }
+  } else fp_pos = NULL
 
-  fp_neg <- FingerPrintTableNEG(subfolder_neg, folderwithSIRIUSfiles)
-
-  if(nrow(fp_neg) != 0){
+  if(!is.null(subfolder_neg)){
+    fp_neg <- FingerPrintTableNEG(subfolder_neg, folderwithSIRIUSfiles)
     colnames(fp_neg) <- c(fp_names_neg, "predion", "id", "foldernumber", "predform")
-  }
+  } else fp_neg = NULL
 
   if (!is.null(subfolder_neg) & !is.null(subfolder_pos)){
 
@@ -154,43 +153,80 @@ FingerPrintTable <- function(subfolder, fp_names_pos, fp_names_neg, fp_names_com
 
 #' @export
 FingerPrintTablePOS <- function(subfolder, folderwithSIRIUSfiles){
+  
   fingerprint_data <- tibble()
-  for(direct in subfolder){
-# subfolder with data must be on a form where id is on second place after nr_ (0_Einc270001_Einc270001)
-    file_name <- str_split(direct, "_")
-    comp_name <- str_split(direct, "/")
 
-    sir_fold <- file_name[[1]][1]
-    id_this <- file_name[[1]][2] # if id in some other position, this can be changed
-    pred_ion <- comp_name[[1]][3]
+  if (length(subfolder) > 0){
+    # initialise progress bar
+    print(paste0("Found", length(subfolder), "positive mode SIRIUS files", sep = " "))
+    ii = 1
+    pb <- txtProgressBar(min = 0, max = length(subfolder), initial = 0, style = 3)
 
-    filedata <- read_delim(paste(folderwithSIRIUSfiles, direct, sep = "/"), delim = " ", col_names = FALSE)
-    filedata <- as_tibble(t(filedata))
-    filedata <- filedata %>%
-      mutate(predion = pred_ion) %>%
-      mutate(predion = sub("\\..*", "", predion)) %>%
-      mutate(id = id_this) %>%
-      mutate(sir_fol_nr = sir_fold) %>%
-      mutate(predform = sub("\\_.*", "", predion))
-    fingerprint_data <- fingerprint_data %>%
-      bind_rows(filedata)
-  }
-  return(fingerprint_data)
-}
-
-#' @export
-FingerPrintTableNEG <- function(subfolder, folderwithSIRIUSfiles){
-  fingerprint_data <- tibble()
-  for(direct in subfolder){
-# subfolder with data must be on a form where id is on second place after nr_ (0_Einc270001_Einc270001)
+    for(direct in subfolder){
+      # subfolder with data must be on a form where id is on second place after nr_ (0_Einc270001_Einc270001)
       file_name <- str_split(direct, "_")
       comp_name <- str_split(direct, "/")
 
       sir_fold <- file_name[[1]][1]
-      id_this <- file_name[[1]][2]
+
+      # detect patRoon featureID and parse to output
+      if (str_detect(file_name[[1]][2], "M") & str_detect(file_name[[1]][3], "R")) {
+        id_this <- str_c(file_name[[1]][2], file_name[[1]][3], file_name[[1]][4], sep = "_")
+      } else id_this <- file_name[[1]][2]
+    
+      pred_ion <- comp_name[[1]][3]
+      # changed from readr::read_delim to utils::read.delim due to verbose output
+      filedata <- read.delim(paste(folderwithSIRIUSfiles, direct, sep = "/"), sep = " ", header = FALSE)
+      filedata <- as_tibble(t(filedata))
+      filedata <- filedata %>%
+        mutate(predion = pred_ion) %>%
+        mutate(predion = sub("\\..*", "", predion)) %>%
+        mutate(id = id_this) %>%
+        mutate(sir_fol_nr = sir_fold) %>%
+       mutate(predform = sub("\\_.*", "", predion))
+      fingerprint_data <- fingerprint_data %>%
+        bind_rows(filedata)
+
+      # update progress bar
+      setTxtProgressBar(pb, ii)
+      ii = ii + 1
+    
+      }
+
+    close(pb)
+    print("Done!")
+    return(fingerprint_data)
+    
+  } else return(fingerprint_data)
+}
+
+#' @export
+FingerPrintTableNEG <- function(subfolder, folderwithSIRIUSfiles){
+  
+  fingerprint_data <- tibble()
+
+  if (length(subfolder) > 0){
+    # progress bar
+    ii = 1
+    print(paste0("Found", length(subfolder), "negative mode SIRIUS files", sep = " "))
+    pb <- txtProgressBar(min = 0, max = length(subfolder), initial = 0, style = 3)
+  
+    for(direct in subfolder){
+      # subfolder with data must be on a form where id is on second place after nr_ (0_Einc270001_Einc270001)
+      file_name <- str_split(direct, "_")
+      comp_name <- str_split(direct, "/")
+
+      sir_fold <- file_name[[1]][1]
+    
+      # detect patRoon featureID and parse to output
+      if (str_detect(file_name[[1]][2], "M") & str_detect(file_name[[1]][3], "R")) {
+        id_this <- str_c(file_name[[1]][2], file_name[[1]][3], file_name[[1]][4], sep = "_")
+      } else id_this <- file_name[[1]][2]
+    
       pred_ion <- comp_name[[1]][3]
 
-      filedata <- read_delim(paste(folderwithSIRIUSfiles, direct, sep = "/"), delim = " ", col_names = FALSE)
+      # changed from readr::read_delim to utils::read.delim due to verbose output
+      filedata <- read.delim(paste(folderwithSIRIUSfiles, direct, sep = "/"), sep = " ", header = FALSE)
       filedata <- as_tibble(t(filedata))
       filedata <- filedata %>%
         mutate(predion = pred_ion) %>%
@@ -200,10 +236,18 @@ FingerPrintTableNEG <- function(subfolder, folderwithSIRIUSfiles){
         mutate(predform = sub("\\_.*", "", predion))
       fingerprint_data <- fingerprint_data %>%
         bind_rows(filedata)
-
+    
+    # update progress bar
+    setTxtProgressBar(pb, ii)
+    ii = ii + 1
+    
+    }
+  
+  close(pb)
+  print("Done!")
+    return(fingerprint_data)
+} else return(fingerprint_data)
   }
-  return(fingerprint_data)
-}
 
 #' @export
 SiriusScoreRank1 <- function(subfolder_score, folderwithSIRIUSfiles){
@@ -220,7 +264,12 @@ SiriusScoreRank1 <- function(subfolder_score, folderwithSIRIUSfiles){
       comp_name_score <- str_split(filename, "/")
 
       foldernumber <- file_name_score[[1]][1]
-      id <- file_name_score[[1]][2] #if id is not in second place, [2] must be changed
+      
+      # detect patRoon featureID and parse to output
+      if (str_detect(file_name_score[[1]][2], "M") & str_detect(file_name_score[[1]][3], "R")) {
+        id <- str_c(file_name_score[[1]][2], file_name_score[[1]][3], file_name_score[[1]][4], sep = "_")
+      } else id <- file_name_score[[1]][2]
+      
       pred_st <- comp_name_score[[1]][3]
 
       fileConnection <- file(paste(folderwithSIRIUSfiles, filename, sep = "/"))
