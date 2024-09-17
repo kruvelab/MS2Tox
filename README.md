@@ -1,6 +1,8 @@
 # MS2Tox
 
-MS2Tox is a machine learning tool for predicting ecotoxicity of unidentified chemicals in water by nontarget LC-HRMS. Calculated values are in unit log-mM (milli-molar in logaritmic scale)
+MS2Tox is a machine learning tool for predicting ecotoxicity of unidentified chemicals in water by nontarget LC-HRMS. Calculated values are in unit log-mM (milli-molar in logaritmic scale).
+
+NEW! Added code to calculate CombinedConfidence scores, which are now included alongside the calculated toxicity values to better evaluate their accuracy. CombinedConfidence code in subfolder "Codes".
 
 For installing R-package: 
 
