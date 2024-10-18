@@ -58,7 +58,7 @@ SiriusScores1 <- function(folderwithSIRIUSdata) {
   subfolders_confidenceScore <- subfolders_confidenceScore[grepl("scores", subfolders_confidenceScore)]
 
 
-  ScoreTable <- as_tibble()
+  ScoreTable <- tibble()
   for(subfolder in subfolders_confidenceScore){
     subfolder_name_split <- str_split(subfolder, "_")
     adduct_split <- str_split(subfolder_name_split[[1]][7], ".i")
@@ -108,7 +108,7 @@ SiriusScores1 <- function(folderwithSIRIUSdata) {
       topCSIscore = "missing"
     }
 
-    scoretable1 <- as_tibble(id) %>%
+    scoretable1 <- tibble(id) %>%
       mutate(foldernumber = foldernr) %>%
       mutate(adduct = adduct) %>%
       mutate(molecularFormula = predform) %>%
