@@ -136,7 +136,7 @@ SiriusScores2 <- function(folderwithSIRIUSdata){
   setwd(folderwithSIRIUSdata)
   subfolders_peaksexplained <- dir(folderwithSIRIUSdata, all.files = TRUE, recursive = TRUE, pattern = "formula_candidates.tsv")
   
-  ScoreTable <- as_tibble()
+  ScoreTable <- tibble()
   for(subfolder in subfolders_peaksexplained){
     subfolder_name_split <- str_split(subfolder, "_")
     
