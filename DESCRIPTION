@@ -1,7 +1,7 @@
 Package: MS2Tox
 Type: Package
 Title: Predicting LC50 Values From MS2 Fragmentation Data
-Version: 0.3.2
+Version: 0.4.2
 Date: 2022-10-12
 Author: as.person(c
     "Pilleriin Peets <pilleriin.peets@gmail.com> [aut, cre]",
