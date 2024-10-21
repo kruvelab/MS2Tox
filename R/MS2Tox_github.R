@@ -161,7 +161,7 @@ FingerPrintTablePOS <- function(subfolder, folderwithSIRIUSfiles){
     comp_name <- str_split(direct, "/")
 
     sir_fold <- file_name[[1]][1]
-    id_this <- file_name[[1]][2] # if id in some other position, this can be changed
+    id_this <- comp_name[[1]][1]
     pred_ion <- comp_name[[1]][3]
 
     filedata <- read_delim(paste(folderwithSIRIUSfiles, direct, sep = "/"), delim = " ", col_names = FALSE)
@@ -187,7 +187,7 @@ FingerPrintTableNEG <- function(subfolder, folderwithSIRIUSfiles){
       comp_name <- str_split(direct, "/")
 
       sir_fold <- file_name[[1]][1]
-      id_this <- file_name[[1]][2]
+      id_this <- comp_name[[1]][1]
       pred_ion <- comp_name[[1]][3]
 
       filedata <- read_delim(paste(folderwithSIRIUSfiles, direct, sep = "/"), delim = " ", col_names = FALSE)
@@ -220,7 +220,7 @@ SiriusScoreRank1 <- function(subfolder_score, folderwithSIRIUSfiles){
       comp_name_score <- str_split(filename, "/")
 
       foldernumber <- file_name_score[[1]][1]
-      id <- file_name_score[[1]][2] #if id is not in second place, [2] must be changed
+      id <- comp_name_score[[1]][1]
       pred_st <- comp_name_score[[1]][3]
 
       fileConnection <- file(paste(folderwithSIRIUSfiles, filename, sep = "/"))
