@@ -10,14 +10,14 @@ library(MS2Tox)
 
 #ConfidenceLevels
 
-# folderwithSIRIUSdata <- " ~/SIRIUSfiles"
-# 
-# conf_level <- CombinedConfidence(folderwithSIRIUSdata, maxrank = 1)
+folderwithSIRIUSdata <- "C:/Users/pille/Desktop/SIRIUS/test_sirius5/O2005245"
+
+conf_level <- CombinedConfidence(folderwithSIRIUSdata, maxrank = 1)
 
 CombinedConfidence <- function(folderwithSIRIUSdata, maxrank = 1){
   final_scores <- SiriusScores1(folderwithSIRIUSdata) %>%
     left_join(SiriusScores2(folderwithSIRIUSdata),
-              by = c("id", "foldernumber", "adduct", "molecularFormula")) %>%
+              by = c("id", "adduct", "molecularFormula")) %>%
     mutate(ConfidenceScore = as.numeric(ConfidenceScore)) %>%
     mutate(topCSIscore = as.numeric(topCSIscore)) %>%
     drop_na(rank)
@@ -46,7 +46,7 @@ CombinedConfidence <- function(folderwithSIRIUSdata, maxrank = 1){
     mutate(MassScoreScaled = 6-MassScoreScaled) %>%
     mutate(NewConfidenceScore = (MassScoreScaled+CSIScoreScaled+ConfidenceScoreScaled)/3) %>%
     filter(rank <= maxrank) %>%
-    select(foldernumber, id, adduct, molecularFormula, NewConfidenceScore, rank)
+    select(id, adduct, molecularFormula, NewConfidenceScore, rank)
 
   return(new_confidenceScore)
 
@@ -60,14 +60,15 @@ SiriusScores1 <- function(folderwithSIRIUSdata) {
 
   ScoreTable <- tibble()
   for(subfolder in subfolders_confidenceScore){
-    subfolder_name_split <- str_split(subfolder, "_")
-    adduct_split <- str_split(subfolder_name_split[[1]][7], ".i")
-    formula_split <- str_split(subfolder_name_split[[1]][6], "/")
+    subfolder_name_split <- str_split(subfolder, "/")
+    #subfolder_name_split <- str_split(subfolder, "_")
+    formula_split <- str_split(subfolder_name_split[[1]][3], "_")
+    adduct_split <- str_split(formula_split[[1]][2], ".i")
 
     adduct <- adduct_split[[1]][1]
-    foldernr <- subfolder_name_split[[1]][1]
-    id <- subfolder_name_split[[1]][2]
-    predform <- formula_split[[1]][3]
+    #foldernr <- subfolder_name_split[[1]][1]
+    id <- subfolder_name_split[[1]][1]
+    predform <- formula_split[[1]][1]
 
 
     all_scores <- read_delim(subfolder, delim = "\t", col_names = FALSE, show_col_types = FALSE)
@@ -109,7 +110,7 @@ SiriusScores1 <- function(folderwithSIRIUSdata) {
     }
 
     scoretable1 <- tibble(id) %>%
-      mutate(foldernumber = foldernr) %>%
+      #mutate(foldernumber = foldernr) %>%
       mutate(adduct = adduct) %>%
       mutate(molecularFormula = predform) %>%
       mutate(SiriusScore = siriusscore) %>%
@@ -125,8 +126,8 @@ SiriusScores1 <- function(folderwithSIRIUSdata) {
       unique()
   }
 
-  ScoreTable1 <- ScoreTable %>%
-    mutate(id = as.double(id))
+  ScoreTable1 <- ScoreTable #%>%
+    #mutate(id = as.double(id))
 
   return(ScoreTable1)
 }
@@ -138,19 +139,30 @@ SiriusScores2 <- function(folderwithSIRIUSdata){
   
   ScoreTable <- tibble()
   for(subfolder in subfolders_peaksexplained){
-    subfolder_name_split <- str_split(subfolder, "_")
+    subfolder_name_split <- str_split(subfolder, "/")
     
-    foldernr <- subfolder_name_split[[1]][1]
-    id <- subfolder_name_split[[1]][2]
+    #foldernr <- subfolder_name_split[[1]][1]
+    id <- subfolder_name_split[[1]][1]
     
     
     all_scores <- read_delim(subfolder, delim = "\t", show_col_types = FALSE) 
     
+    
     if (length(all_scores) != 0){
       all_scores_notempty <- all_scores %>%
-        mutate(id = id) %>%
-        mutate(foldernumber = foldernr) %>%
-        select(foldernumber, id, molecularFormula, adduct, SiriusScore, `massErrorPrecursor(ppm)`, rank)
+        mutate(id = id) 
+      
+      if ("formulaRank" %in% colnames(all_scores_notempty)) {
+        all_scores_notempty <- all_scores_notempty %>%
+          rename(rank = formulaRank) %>%
+          select(id, molecularFormula, adduct, SiriusScore, `massErrorPrecursor(ppm)`, rank)
+      } else if ("rank" %in% colnames(all_scores_notempty)) {
+        all_scores_notempty <- all_scores_notempty %>%
+          select(id, molecularFormula, adduct, SiriusScore, `massErrorPrecursor(ppm)`, rank)
+      } else {
+        all_scores_notempty <- all_scores_notempty %>%
+          select(id, molecularFormula, adduct, SiriusScore, `massErrorPrecursor(ppm)`)
+      }
       
       sel_H <- all_scores_notempty %>%
         filter(adduct == "[M + H]+") %>%
@@ -172,8 +184,8 @@ SiriusScores2 <- function(folderwithSIRIUSdata){
       print(paste("File", subfolder, "missing data"))
     }
   }
-  ScoreTable <- ScoreTable %>%
-    mutate(id = as.double(id))
+  ScoreTable <- ScoreTable #%>%
+    #mutate(id = as.double(id))
   
   return(ScoreTable)
   
