@@ -11,6 +11,7 @@ Description: LC50 predictions from fingerprints that are obtained using SIRIUS+C
 License: GPL-2
 Encoding: UTF-8
 LazyData: true
+Depends: R (>= 3.5)
 Imports: 
   Rdisop,
   dplyr,
