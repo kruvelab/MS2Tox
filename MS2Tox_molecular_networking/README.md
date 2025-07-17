@@ -13,5 +13,5 @@
 
 The reloaded version provides
 - 🌐 exemplary code used for Molecular Networking (MN folder)
-- 📊 exemplary code used for Conformal predictions (CP folder)
+- 📊 exemplary code used for Conformal Predictions (CP folder)
 - ⭐ code and trained models of fingerprint-based models. A separate tutorial is provided via the link in the folder (fingerprint_models)
