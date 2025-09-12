@@ -1,4 +1,4 @@
-<h1 align="center">MS2Tox Reloaded: Molecular Networking, Conformal Predictions and Fingerprint-based Models for Discovering Endocrine Disruptors in Mixtures </h1>
+<h1 align="center">Molecular Networking, Conformal Predictions and Revised Fingerprint-based Models for Discovering Endocrine Disruptors in Mixtures </h1>
 
 <p align="center">
   <img src="https://github.com/kruvelab/MS2Tox/blob/main/MS2Tox_molecular_networking/ms2tox_reloaded_background.png"/>
